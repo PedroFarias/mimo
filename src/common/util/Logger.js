@@ -6,11 +6,11 @@ class Logger {
   }
 
   error = (...args) => {
-    console.error(format(...args));
+    console.log('[ERROR]: ' + format(...args));
   }
 
   log = (...args) => {
-    console.log(format(...args));
+    console.log('[INFO]: ' + format(...args));
   }
 }
 

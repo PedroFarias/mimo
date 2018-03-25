@@ -1,8 +1,8 @@
 {
-  "packagerPort": 19009,
-  "packagerPid": 12785,
-  "expoServerPort": 19008,
-  "expoServerNgrokUrl": "https://2w-a2k.victordomene.mimo-user.exp.direct",
-  "packagerNgrokUrl": "https://packager.2w-a2k.victordomene.mimo-user.exp.direct",
-  "ngrokPid": 12817
+  "packagerPort": null,
+  "packagerPid": null,
+  "expoServerPort": null,
+  "expoServerNgrokUrl": null,
+  "packagerNgrokUrl": null,
+  "ngrokPid": null
 }

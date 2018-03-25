@@ -5,7 +5,7 @@
         "backgroundColor": "#000"
     },
     "description": "Mimo App, for stores.",
-    "slug": "mimo",
+    "slug": "mimo-store",
     "privacy": "public",
     "sdkVersion": "25.0.0",
     "platforms": ["ios", "android"],
