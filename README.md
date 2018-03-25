@@ -55,8 +55,6 @@ The directory structure is as follows:
     │   └── util
     ├── firebase
     │   └── functions
-    │       ├── Helpers.es7 -> /Users/victordomene/mimo/scripts/../src/common/util/Helpers.js
-    │       ├── Logger.es7 -> /Users/victordomene/mimo/scripts/../src/common/util/Logger.js
     │       └── es7
     ├── mimo-store
     │   ├── App.js
