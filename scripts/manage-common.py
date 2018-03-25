@@ -29,33 +29,38 @@ files = {
 }
 
 def copy_to_symlink():
-    for relative_symlink in files.keys():
-        original = script_path + '/' + files[relative_symlink]
-        symlink = script_path + '/' + relative_symlink
-        if os.path.islink(symlink):
-            print('File {} is a symlink; skipping.'.format(symlink))
+    for relative_file in files.keys():
+        original = script_path + '/' + files[relative_file]
+        dest = script_path + '/' + relative_file
+        if os.path.islink(dest):
+            print('File {} is a symlink; skipping.'.format(dest))
             continue
 
-        os.symlink(os.path.relpath(original, symlink), symlink)
+        if os.path.exists(dest):
+            if os.path.isdir(dest):
+                shutil.rmtree(dest)
+            else:
+                os.remove(dest)
 
-        print('File {} is now a symlink.'.format(symlink))
+        os.symlink(os.path.relpath(original, dest), dest)
+
+        print('File {} is now a symlink.'.format(dest))
 
 def symlink_to_copy():
-    for relative_symlink in files.keys():
-        original = script_path + '/' + files[relative_symlink]
-        symlink = script_path + '/' + relative_symlink
-        if not os.path.islink(symlink):
-            print('File {} is not a symlink; skipping.'.format(symlink))
+    for relative_file in files.keys():
+        original = script_path + '/' + files[relative_file]
+        dest = script_path + '/' + relative_file
+        if not os.path.islink(dest):
+            print('File {} is not a symlink; skipping.'.format(dest))
             continue
 
-        os.remove(symlink)
-
+        os.unlink(dest)
         if os.path.isdir(original):
-            shutil.copytree(original, symlink)
+            shutil.copytree(original, dest)
         else:
-            shutil.copy(original, symlink)
+            shutil.copy(original, dest)
 
-        print('File {} is no longer a symlink.'.format(symlink))
+        print('File {} is no longer a symlink.'.format(dest))
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
