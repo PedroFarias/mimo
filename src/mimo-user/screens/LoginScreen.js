@@ -1,1 +1,1 @@
-/Users/victordomene/mimo/scripts/../src/common/screens/LoginScreen.js
+../../../common/screens/LoginScreen.js

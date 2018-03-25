@@ -42,7 +42,7 @@ def copy_to_symlink():
             else:
                 os.remove(symlink)
 
-        os.symlink(original, symlink)
+        os.symlink(os.path.relpath(original, symlink), symlink)
 
         print('File {} is now a symlink.'.format(symlink))
 

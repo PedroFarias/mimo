@@ -34,14 +34,8 @@ how to do it, and why it matters.*
 The directory structure is as follows:
 
 ```
-.
-├── BUGS.md
-├── README.md
-├── TODO.md
 ├── docs
-├── out
 ├── scripts
-│   └── manage-common.py
 └── src
     ├── common
     │   ├── api
@@ -57,23 +51,21 @@ The directory structure is as follows:
     │   └── functions
     │       └── es7
     ├── mimo-store
-    │   ├── App.js
-    │   ├── api -> /Users/victordomene/mimo/scripts/../src/common/api
-    │   ├── assets -> /Users/victordomene/mimo/scripts/../src/common/assets
-    │   ├── components -> /Users/victordomene/mimo/scripts/../src/common/components
+    │   ├── api -> ../../common/api
+    │   ├── assets -> ../../common/assets
+    │   ├── components -> ../../common/components
     │   ├── navigation
     │   ├── screens
-    │   ├── state -> /Users/victordomene/mimo/scripts/../src/common/state
-    │   └── util -> /Users/victordomene/mimo/scripts/../src/common/util
+    │   ├── state -> ../../common/state
+    │   └── util -> ../../common/util
     └── mimo-user
-        ├── App.js
-        ├── api -> /Users/victordomene/mimo/scripts/../src/common/api
-        ├── assets -> /Users/victordomene/mimo/scripts/../src/common/assets
-        ├── components -> /Users/victordomene/mimo/scripts/../src/common/components
+        ├── api -> ../../common/api
+        ├── assets -> ../../common/assets
+        ├── components -> ../../common/components
         ├── navigation
         ├── screens
-        ├── state -> /Users/victordomene/mimo/scripts/../src/common/state
-        └── util -> /Users/victordomene/mimo/scripts/../src/common/util
+        ├── state -> ../../common/state
+        └── util -> ../../common/util
 ```
 
 The separation of folders and all of this is explained in `docs/`.

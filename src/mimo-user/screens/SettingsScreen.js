@@ -1,1 +1,1 @@
-/Users/victordomene/mimo/scripts/../src/common/screens/SettingsScreen.js
+../../../common/screens/SettingsScreen.js
