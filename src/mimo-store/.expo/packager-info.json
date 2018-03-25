@@ -1,0 +1,8 @@
+{
+  "expoServerNgrokUrl": "https://2w-a2k.victordomene.mimo-store.exp.direct",
+  "packagerNgrokUrl": "https://packager.2w-a2k.victordomene.mimo-store.exp.direct",
+  "ngrokPid": 10026,
+  "expoServerPort": 19002,
+  "packagerPort": 19003,
+  "packagerPid": 10011
+}

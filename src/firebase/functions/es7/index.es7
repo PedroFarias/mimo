@@ -1,0 +1,238 @@
+import * as request from 'request';
+import * as admin from 'firebase-admin';
+import * as functions from 'firebase-functions';
+import express from 'express';
+
+import {
+  getConversationPath,
+  getImagePath,
+  getMimosPath,
+  getStoreEmployeesPath,
+  getUserConversationPath,
+  getUserPendingMimoPath,
+  getUserPushNotificationTokenPath,
+} from './Helpers';
+
+import { logger } from './Logger';
+
+import {
+  cors,
+  parseImage,
+  parseJson,
+  parseRawBody,
+  parseUrlEncoded,
+  validateFirebaseToken,
+} from './middleware';
+
+admin.initializeApp(functions.config().firebase);
+const app = express();
+
+// Always checks CORS, parser as JSON and validateFirebaseToken
+app.use(cors);
+app.use(parseJson);
+app.use(parseUrlEncoded);
+app.use(validateFirebaseToken);
+
+// For uploadImage, run all necessary middleware to parse
+app.use('/uploadImage', parseRawBody);
+app.use('/uploadImage', parseImage);
+app.post('/uploadImage', async (req, res, next) => {
+  console.log('uploadImage');
+  console.log(req.fields);
+  if (req.fields.cUid == null || req.fields.mUid == null ||
+    req.files == null) {
+    res.status(400).send('Bad Request');
+    return;
+  }
+
+  const cUid = req.fields.cUid;
+  const mUid = req.fields.mUid;
+  const file = req.files.file[0];
+  const fs = admin.storage().bucket();
+
+  const iPath = getImagePath(cUid, mUid);
+  const fileUpload = fs.file(iPath);
+  const blobStream = fileUpload.createWriteStream({
+    metadata: { contentType: 'image/jpeg', },
+  });
+
+  /**
+   * Here I leave my comment on how shitty Node.js is. Honestly ES6 is better.
+   */
+  blobStream.on('error', (error) => {
+    logger.error(`Could not upload image at path "%s". Error: %s`, iPath,
+      error);
+    res.status(400).send('Bad Request');
+    return;
+  });
+
+  blobStream.on('finish', async () => {
+    const metadata = await fileUpload.getMetadata()
+    res.status(200).json(metadata);
+    return next();
+  });
+
+  blobStream.end(file.buffer);
+});
+
+// For sendMimo, perform actions on the real-time database.
+app.post('/sendMimo', async (req, res, next) => {
+  const db = admin.database().ref();
+
+  const sUids = req.body.sUids;
+  const mUid = req.body.mUid;
+  if (sUids == null || mUid == null) {
+    res.status(400).send('Bad Request');
+    return;
+  }
+
+  for (let sUid of Object.keys(sUids)) {
+    const ePath = getStoreEmployeesPath(sUid);
+
+    try {
+      const eSnapshot = await db.child(ePath).once('value');
+      if (eSnapshot == null || eSnapshot.val() == null) {
+        logger.debug(`No employees were found for store "%s".`, sUid);
+        continue;
+      }
+
+      // Send the mimo request to every employee.
+      const employees = eSnapshot.val();
+      for (let eUid of Object.keys(employees)) {
+        const mPath = getUserPendingMimoPath(eUid, mUid);
+        await db.child(mPath).set(true);
+      }
+    } catch (error) {
+      logger.error(`Could not send mimo request "%s" to store "%s". Error: \
+        %s`, mUid, sUid, error.toString());
+      res.status(400).send('Bad Request');
+      return;
+    }
+  }
+
+  res.status(200).send('OK');
+});
+
+app.post('/blockConversation', async (req, res, next) => {
+  const db = admin.database().ref();
+
+  const cUid = req.body.cUid;
+  const customerUid = req.body.customerUid;
+  const employeeUid = req.body.employeeUid;
+  if (cUid == null) {
+    res.status(400).send('Bad Request');
+    return;
+  }
+
+  const customerPath = getUserConversationPath(customerUid, cUid);
+  const employeePath = getUserConversationPath(employeeUid, cUid);
+  try {
+    await db.child(customerPath).remove();
+    await db.child(employeePath).remove();
+
+  } catch (error) {
+    logger.error(`Could not block conversation "%s". Error: %s`, cUid,
+      error.toString());
+    res.status(500).send('Internal Server Error');
+    return;
+  }
+
+  res.status(200).send('OK');
+});
+
+const onStoreEmployee = async (params, snapshot) => {
+  logger.debug(`params: %s, snapshot.val(): %s`, params, snapshot.val());
+  const db = admin.database().ref();
+  const sUid = params.sUid;
+  const eUid = params.eUid;
+
+  try {
+    const mimosPath = getMimosPath();
+    const qSnapshot = await db.child(mimosPath).orderByChild('status/pending')
+      .equalTo(true).once('value');
+
+    const mimos = qSnapshot.val();
+    logger.debug(`all mimos pending: %s`, mimos);
+
+    for (let mUid of Object.keys(mimos)) {
+      if (sUid in mimos[mUid].stores) {
+        const mPath = getUserPendingMimoPath(eUid, mUid);
+        await db.child(mPath).set(true);
+      }
+    }
+  } catch (error) {
+    logger.debug(`something went wrong: %s`, error.toString());
+  }
+};
+
+const onMessageSendPush = async (params, snapshot) => {
+  logger.debug(`params: %s, snapshot.val(): %s`, params, snapshot.val());
+  const db = admin.database().ref();
+  const cUid = params.cUid;
+  const mUid = params.mUid;
+  const message = snapshot.val();
+
+  const cPath = getConversationPath(cUid);
+
+  try {
+    const cSnapshot = await db.child(cPath).once('value');
+    if (cSnapshot == null || cSnapshot.val() == null) {
+      logger.error(`Cannot find conversation "%s" to send push notifications.`,
+        cUid);
+      return;
+    }
+    const conversation = cSnapshot.val();
+
+    logger.debug(`Conversation: %s`, conversation);
+
+    const requestBody = [];
+    const pushBody = {
+      title: 'Você tem uma nova mensagem!',
+      body: 'Você tem uma nova mensagem! Body',
+    };
+
+    const customerPath = getUserPushNotificationTokenPath(
+      conversation.customer);
+    const employeePath = getUserPushNotificationTokenPath(
+      conversation.employee);
+    const customerSnapshot = await db.child(customerPath).once('value');
+    const employeeSnapshot = await db.child(employeePath).once('value');
+
+    if (customerSnapshot != null && customerSnapshot.val() != null) {
+      const customerToken = customerSnapshot.val();
+      requestBody.push({...pushBody, to: customerToken});
+    }
+    if (employeeSnapshot != null && employeeSnapshot.val() != null) {
+      const employeeToken = employeeSnapshot.val();
+      requestBody.push({...pushBody, to: employeeToken});
+    }
+
+    const headers = {
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+    };
+
+    logger.debug(`Sending request to Expo servers: %s`, requestBody);
+
+    request.post('https://exp.host/--/api/v2/push/send', {
+      method: 'POST',
+      headers: headers,
+      body: JSON.stringify(requestBody),
+    });
+  } catch (error) {
+    logger.error(`Failed to send push notification. Error: %s`,
+      error.toString());
+  }
+};
+
+const api = functions.https.onRequest(app);
+const storeEmployee = functions.database
+  .ref('/stores/private/{sUid}/employees/{eUid}').onCreate(async (event) => {
+  await onStoreEmployee(event.params, event.data);
+});
+const messagePushNotification = functions.database
+  .ref('/conversations/{cUid}/messages/{mUid}').onCreate(async (event) => {
+  await onMessageSendPush(event.params, event.data);
+});
+
+export { api, storeEmployee, messagePushNotification };
