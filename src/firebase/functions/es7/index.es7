@@ -188,7 +188,7 @@ const onMessageSendPush = async (params, snapshot) => {
     const requestBody = [];
     const pushBody = {
       title: 'Você tem uma nova mensagem!',
-      body: 'Você tem uma nova mensagem! Body',
+      body: 'Quem sabe que produto te espera agora?',
     };
 
     const customerPath = getUserPushNotificationTokenPath(
