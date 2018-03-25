@@ -25,6 +25,10 @@ https://docs.expo.io/versions/latest/guides/up-and-running.html
 * Generating standalone apps:
 https://docs.expo.io/versions/latest/guides/building-standalone-apps.html
 
+*Be sure to convert all symlinks to copies of files before doing any of this.
+This is crucial. Look at `docs/common.md` to understand what that is, and 
+how to do it, and why it matters.*
+
 ## Directory Structure
 
 The directory structure is as follows:

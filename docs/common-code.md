@@ -12,10 +12,13 @@ For any piece of code that will be reused between `src/mimo-user` and
 places at `src/mimo-user` and `src/mimo-store`, please add a symlink to the
 correct location of the file/folder in `src/common`.
 
-## `symlink-to-copy`, `copy-to-symlink`
+## `manage-common.py`
 
-There are two scripts in `scripts/` that will be essential to developing code
+There is a script in `scripts/` that will be essential to developing code
 in this world of annoying package managers.
+
+There are three options to the script (specified as a command-line argument):
+`to-copy`, `to-symlink` and `sync`.
 
 The first one, `symlink-to-copy`, will take all registered symlinks and
 transform them into copies of the original files. This is a script that should
@@ -28,7 +31,14 @@ Git repository. This is because we definitely don't want two files that are
 literally the same thing, ever. The only reason we have that is because to run,
 we can't have symlinks. So, whenever *not running*, just make them symlinks.
 
+The third one will simply do `to-symlink` and then `to-copy`, effectively
+syncing the code from the `src/common` to the other places.
+
 I know, this is ugly, but it's the nicest solution I could think of...
+
+*If you add more common files, ADD THEM TO THE SCRIPT. The script is very
+simple and doesn't do anything fancy to track symlinks. So, if you want 
+something tracked, manually add them. Yes, I am incredibly lazy.*
 
 ## `firebase` folder
 

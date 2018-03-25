@@ -1,5 +1,6 @@
 import os
 import shutil
+import sys
 
 script_path = os.path.dirname(os.path.realpath(__file__))
 
@@ -27,7 +28,7 @@ files = {
     '../src/firebase/functions/Logger.es7': '../src/common/util/Logger.js',
 }
 
-def main():
+def copy_to_symlink():
     for relative_symlink in files.keys():
         original = script_path + '/' + files[relative_symlink]
         symlink = script_path + '/' + relative_symlink
@@ -45,5 +46,37 @@ def main():
 
         print('File {} is now a symlink.'.format(symlink))
 
+def symlink_to_copy():
+    for relative_symlink in files.keys():
+        original = script_path + '/' + files[relative_symlink]
+        symlink = script_path + '/' + relative_symlink
+        if not os.path.islink(symlink):
+            print('File {} is not a symlink; skipping.'.format(symlink))
+            continue
+
+        if os.path.exists(symlink):
+            os.remove(symlink)
+
+        if os.path.isdir(original):
+            shutil.copytree(original, symlink)
+        else:
+            shutil.copy(original, symlink)
+
+        print('File {} is no longer a symlink.'.format(symlink))
+
 if __name__ == "__main__":
-    main()
+    if len(sys.argv) < 2:
+        print('Please specify an option: to-symlink, to-copy, sync.')
+        exit(1)
+
+    arg = sys.argv[1]
+    if arg == 'to-symlink':
+        copy_to_symlink()
+    elif arg == 'to-copy':
+        symlink_to_copy()
+    elif arg == 'sync':
+        copy_to_symlink()
+        symlink_to_copy()
+    else:
+        print('Invalid option: please use to-symlink, to-copy or sync.')
+        exit(1)
