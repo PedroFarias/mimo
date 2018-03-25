@@ -23,13 +23,10 @@ export default class PushManager {
    * since it does exactly what we were looking for.
    */
   _registerForPushNotificationsAsync = async () => {
-    console.log("REGISTERING");
     const { status: existingStatus } = await Permissions.getAsync(
       Permissions.NOTIFICATIONS
     );
     let finalStatus = existingStatus;
-
-    logger.debug(`Existing status: %s`, existingStatus);
 
     // Only ask if permissions have not already been determined, because
     // iOS won't necessarily prompt the user a second time.
@@ -44,13 +41,9 @@ export default class PushManager {
     if (finalStatus !== 'granted') {
       return;
     }
-    console.log("GRANTED");
 
     // Get the token that uniquely identifies this device
     let token = await Notifications.getExpoPushTokenAsync();
-
-    console.log("TOKEEEEEEN");
-    console.log(token);
 
     // Request that server saves it.
     await this._server.savePushNotification(token);

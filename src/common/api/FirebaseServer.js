@@ -76,47 +76,8 @@ export default class FirebaseServer extends Server {
         if (this._user == null) {
           return;
         }
-
-        const stores = this._db.child('stores/public');
-        stores.set({
-          '0': {
-            name: 'Vendedor Mimo',
-            categories: ['Masculino', 'Feminino'],
-            address: { city: 'São Paulo', street: '', neighborhood: '' },
-            logo: 'https://firebasestorage.googleapis.com/v0/b/mimo-7b006.appspot.com/o/icon.png?alt=media&token=1af0c6c1-6b68-413c-8e8b-4a71f819b06f',
-            description: 'Vendedor Mimo.',
-          },
-          '1': {
-            name: 'Austral Culture',
-            categories: ['Masculino', 'Feminino'],
-            address: { city: 'São Paulo', street: '', neighborhood: '' },
-            logo: 'https://raw.githubusercontent.com/PedroFarias/mimo/master/brand_logos/austral_culture.jpg',
-            description: 'Somos Austral. Marca de Surfwear brasileira especializada em moda sustentável. Somos pela vida e pela natureza, venha nos conhecer!',
-          },
-          '2': {
-            name: 'Zapälla',
-            categories: ['Masculino'],
-            address: { city: 'São Paulo', street: 'Av. Pres. Juscelino Kubitschek, 2041', neighborhood: 'Vila Nova Conceição' },
-            logo: 'https://raw.githubusercontent.com/PedroFarias/mimo/master/brand_logos/zap%C3%A4lla.jpg',
-            description: 'Zapälla é a personificação do homem familiar, sofisticado e contemporâneo que busca experienciar o mundo e o melhor da vida com estilo e tradição.',
-          },
-          '3': {
-            name: 'FIT',
-            categories: ['Feminino'],
-            address: { city: 'São Paulo', street: 'Av. Brg. Faria Lima, 2232', neighborhood: 'Jardim Paulistano' },
-            logo: 'https://raw.githubusercontent.com/PedroFarias/mimo/master/brand_logos/fit.jpg',
-            description: 'Inaugurada em 1986, a FIT produz peças exclusivas, originais e de alta qualidade entre roupas, calçados e acessórios.',
-          },
-          '4': {
-            name: 'ATeen',
-            categories: ['Masculino'],
-            address: { city: 'São Paulo', street: 'Av. Brg. Faria Lima, 2232', neighborhood: 'Jardim Paulistano' },
-            logo: 'https://raw.githubusercontent.com/PedroFarias/mimo/master/brand_logos/ateen.jpg',
-            description: 'A Ateen Começou em 1994, no Rio de Janeiro, e atualmente possui 21 lojas próprias entre Rio, São Paulo, Brasília, Campinas, Belo Horizonte, Curitiba E Ribeirão Preto. Além da Loja Online e diversos pontos de venda multimarcas pelo Brasil, a marca está em constante expansão e tornou-se referência no mercado de moda feminina. Para a diretora criativa, Maria Rita Magalhães Pinto, a ATEEN é uma marca atemporal, sofisticada e despojada. “ao longo desses 23 anos no mercado, meu intuito sempre foi criar peças versáteis, para as diferentes mulheres com o mesmo desejo: sentir-se bem e com estilo em qualquer ocasião".',
-          },
-        });
       } catch (error) {
-        logger.debug(`Something went wrong: logging out. Error: %s`,
+        logger.debug(`Could not initialize. Logging out. Error: %s`,
           error.toString());
         this.logout();
       }
@@ -1090,7 +1051,6 @@ export default class FirebaseServer extends Server {
    *  Nothing.
    */
   _listenUserCallbacks = (uUid) => {
-    logger.debug(`Listening to user callbacks: %s`, uUid);
     const uPath = getUserPublicPath(uUid);
 
     try {
