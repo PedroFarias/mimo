@@ -36,12 +36,6 @@ def copy_to_symlink():
             print('File {} is a symlink; skipping.'.format(symlink))
             continue
 
-        if os.path.exists(symlink):
-            if os.path.isdir(symlink):
-                shutil.rmtree(symlink)
-            else:
-                os.remove(symlink)
-
         os.symlink(os.path.relpath(original, symlink), symlink)
 
         print('File {} is now a symlink.'.format(symlink))
@@ -54,8 +48,7 @@ def symlink_to_copy():
             print('File {} is not a symlink; skipping.'.format(symlink))
             continue
 
-        if os.path.exists(symlink):
-            os.remove(symlink)
+        os.remove(symlink)
 
         if os.path.isdir(original):
             shutil.copytree(original, symlink)
