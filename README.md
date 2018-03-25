@@ -32,3 +32,50 @@ how to do it, and why it matters.*
 ## Directory Structure
 
 The directory structure is as follows:
+
+```
+.
+├── BUGS.md
+├── README.md
+├── TODO.md
+├── docs
+├── out
+├── scripts
+│   └── manage-common.py
+└── src
+    ├── common
+    │   ├── api
+    │   ├── assets
+    │   │   ├── fonts
+    │   │   ├── icons
+    │   │   └── images
+    │   ├── components
+    │   ├── screens
+    │   ├── state
+    │   └── util
+    ├── firebase
+    │   └── functions
+    │       ├── Helpers.es7 -> /Users/victordomene/mimo/scripts/../src/common/util/Helpers.js
+    │       ├── Logger.es7 -> /Users/victordomene/mimo/scripts/../src/common/util/Logger.js
+    │       └── es7
+    ├── mimo-store
+    │   ├── App.js
+    │   ├── api -> /Users/victordomene/mimo/scripts/../src/common/api
+    │   ├── assets -> /Users/victordomene/mimo/scripts/../src/common/assets
+    │   ├── components -> /Users/victordomene/mimo/scripts/../src/common/components
+    │   ├── navigation
+    │   ├── screens
+    │   ├── state -> /Users/victordomene/mimo/scripts/../src/common/state
+    │   └── util -> /Users/victordomene/mimo/scripts/../src/common/util
+    └── mimo-user
+        ├── App.js
+        ├── api -> /Users/victordomene/mimo/scripts/../src/common/api
+        ├── assets -> /Users/victordomene/mimo/scripts/../src/common/assets
+        ├── components -> /Users/victordomene/mimo/scripts/../src/common/components
+        ├── navigation
+        ├── screens
+        ├── state -> /Users/victordomene/mimo/scripts/../src/common/state
+        └── util -> /Users/victordomene/mimo/scripts/../src/common/util
+```
+
+The separation of folders and all of this is explained in `docs/`.
