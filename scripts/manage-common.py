@@ -24,8 +24,8 @@ files = {
     '../src/mimo-store/screens/LoginScreen.js': '../src/common/screens/LoginScreen.js',
     '../src/mimo-store/screens/SettingsScreen.js': '../src/common/screens/SettingsScreen.js',
 
-    '../src/firebase/functions/Helpers.es7': '../src/common/util/es7/Helpers.js',
-    '../src/firebase/functions/Logger.es7': '../src/common/util/es7/Logger.js',
+    '../src/firebase/functions/es7/Helpers.es7': '../src/common/util/Helpers.js',
+    '../src/firebase/functions/es7/Logger.es7': '../src/common/util/Logger.js',
 }
 
 def copy_to_symlink():

@@ -298,7 +298,8 @@ const styles = {
     list: {
       flex: 1,
       flexGrow: 1,
-      paddingTop: 5,
+      padding: 0,
+      margin: 0,
       paddingBottom: 5,
       alignItems: 'center',
       justifyContent: 'center',
@@ -343,26 +344,30 @@ const styles = {
   store: StyleSheet.create({
     container: {
       flex: 1,
-      width: '100%',
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-around',
-      backgroundColor: '#fff',
-      padding: 20,
-      paddingBottom: 5,
-      paddingTop: 5,
+      backgroundColor: Colors.White,
+      marginLeft: 20,
+      marginRight: 20,
     },
     logo: {
       width: 100,
       height: 100,
       resizeMode: 'contain',
+      padding: 3,
+      marginRight: 25,
     },
     description: {
-      width: '40%',
+      width: '50%',
+      padding: 3,
+      marginRight: 50,
     },
     checkbox: {
       width: 20,
       height: 20,
+      margin: 0,
+      padding: 0,
     },
     name: {
       color: Colors.Mimo,
