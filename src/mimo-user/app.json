@@ -18,7 +18,11 @@
       "backgroundColor": "#2eb2ff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.googleusercontent.bc.35.184.55.1"
+    },
+    "android": {
+      "package": "com.googleusercontent.bc.35.184.55.1"
     }
   }
 }
