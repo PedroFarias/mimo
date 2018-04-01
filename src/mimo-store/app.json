@@ -18,10 +18,10 @@
       "backgroundColor": "#2eb2ff"
     },
     "android": {
-	"package": "com.googleusercontent.bc.35.184.55.1"
+	"package": "io.mimoapp.mimostore"
     },
     "ios": {
-      	"bundleIdentifier": "com.googleusercontent.bc.35.184.55.1",
+      	"bundleIdentifier": "io.mimoapp.mimostore",
 	"supportsTablet": true
     }
   }

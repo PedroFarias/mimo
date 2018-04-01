@@ -13,5 +13,7 @@ export const Config = {
     androidClientId:
       '81398270004-4jjimai15p5b86lqjasfsp60bv1bf4hl.apps.googleusercontent.com',
     scopes: ['profile', 'email'],
+    iosStandaloneAppClientId: '81398270004-lpq105p6a1f4vi4oebhlgvqs1j1anc9v.apps.googleusercontent.com', 
+    behavior: 'web',
   },
 };

@@ -1,8 +1,8 @@
 {
-  "expoServerNgrokUrl": "https://jz-jp3.mimoapp.mimo-store.exp.direct",
-  "packagerNgrokUrl": "https://packager.jz-jp3.mimoapp.mimo-store.exp.direct",
-  "ngrokPid": 1583,
-  "expoServerPort": 19000,
-  "packagerPort": 19001,
-  "packagerPid": 1569
+  "expoServerNgrokUrl": null,
+  "packagerNgrokUrl": null,
+  "ngrokPid": null,
+  "expoServerPort": null,
+  "packagerPort": null,
+  "packagerPid": null
 }

@@ -19,7 +19,12 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.googleusercontent.bc.35.184.55.1"
+      "bundleIdentifier": "com.googleusercontent.bc.35.184.55.1",
+      "config": {
+        "googleSignIn": {
+          "reservedClientId": "com.googleusercontent.apps.81398270004-lpq105p6a1f4vi4oebhlgvqs1j1anc9v"
+	}
+      } 
     },
     "android": {
       "package": "com.googleusercontent.bc.35.184.55.1"
