@@ -13,7 +13,7 @@ import {
 
 import { stateManager } from '../state/StateManager';
 import { Auth, Colors } from '../util/Constants';
-import { Config } from '../util/Config';
+import { Config } from '../config/Config';
 import { logger } from '../util/Logger';
 
 /**

@@ -3,7 +3,7 @@ import * as firebase from 'firebase';
 import Server from './Server';
 import { logger } from '../util/Logger';
 import { Auth } from '../util/Constants';
-import { Config } from '../util/Config';
+import { Config } from '../config/Config';
 
 import {
   assertEmployee,

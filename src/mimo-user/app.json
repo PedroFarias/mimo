@@ -19,15 +19,15 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.googleusercontent.bc.35.184.55.1",
+      "bundleIdentifier": "io.mimoapp.mimouser",
       "config": {
         "googleSignIn": {
-          "reservedClientId": "com.googleusercontent.apps.81398270004-lpq105p6a1f4vi4oebhlgvqs1j1anc9v"
-	}
-      } 
+          "reservedClientId": "com.googleusercontent.apps.81398270004-rbvud2li4t79jgthfl3aji0g7e1gmim0"
+        }
+      }
     },
     "android": {
-      "package": "com.googleusercontent.bc.35.184.55.1"
+      "package": "io.mimoapp.mimouser"
     }
   }
 }

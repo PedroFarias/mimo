@@ -17,12 +17,17 @@
       "resizeMode": "contain",
       "backgroundColor": "#2eb2ff"
     },
-    "android": {
-	"package": "io.mimoapp.mimostore"
-    },
     "ios": {
-      	"bundleIdentifier": "io.mimoapp.mimostore",
-	"supportsTablet": true
+	  "supportsTablet": true,
+      "bundleIdentifier": "io.mimoapp.mimostore",
+      "config": {
+        "googleSignIn": {
+          "reservedClientId": "com.googleusercontent.apps.81398270004-cu6s6bcggde59p5j7l67im812fk78igc"
+        }
+      }
+    },
+    "android": {
+        "package": "io.mimoapp.mimostore"
     }
   }
 }
