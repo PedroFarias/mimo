@@ -27,7 +27,13 @@
       }
     },
     "android": {
-        "package": "io.mimoapp.mimostore"
+      "package": "io.mimoapp.mimostore",
+      "config": {
+        "googleSignIn": {
+          "apiKey": "AIzaSyDCR05FYk4fyot8b7cKP1ka-lodyeDCr0E",
+          "certificateHash": "E7133E9F37F2E6CF14E8FD2C9C7AF18C49408CDC"
+        }
+      }
     }
   }
 }

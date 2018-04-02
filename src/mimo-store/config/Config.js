@@ -14,6 +14,8 @@ export const Config = {
       '81398270004-4jjimai15p5b86lqjasfsp60bv1bf4hl.apps.googleusercontent.com',
     iosStandaloneAppClientId:
       '81398270004-cu6s6bcggde59p5j7l67im812fk78igc.apps.googleusercontent.com',
+    androidStandaloneAppClientId:
+      '81398270004-82ger4umuqq4pufhfjoiledig1a42dkl.apps.googleusercontent.com',
     scopes: ['profile', 'email'],
     behavior: 'web',
   },

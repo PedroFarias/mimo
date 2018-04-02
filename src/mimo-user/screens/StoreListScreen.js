@@ -359,7 +359,7 @@ const styles = {
       marginRight: 25,
     },
     description: {
-      width: '50%',
+      width: '45%',
       padding: 3,
       marginRight: 50,
     },
