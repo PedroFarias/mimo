@@ -1,8 +1,6 @@
 import { binarySearch } from '../util/Helpers';
 import { logger } from '../util/Logger';
 
-import assert from 'assert';
-
 export default class ConversationManager {
   constructor(stateManager, server, options) {
     logger.debug(`ConversationManager.constructor: [options = %s]`, options);

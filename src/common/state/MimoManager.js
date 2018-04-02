@@ -1,8 +1,6 @@
 import { binarySearch } from '../util/Helpers';
 import { logger } from '../util/Logger';
 
-import assert from 'assert';
-
 export default class MimoManager {
   constructor(stateManager, server, options) {
     logger.debug(`MimoManager.constructor: [options = %s]`, options);
@@ -49,7 +47,9 @@ export default class MimoManager {
     logger.debug(`MimoManager.getPendingMimo: [mUid = %s]`, mUid);
 
     const index = binarySearch(this._mimos, this._mimoCmp, mUid);
-    assert(index !== null, 'Mimo in getPendingMimo must exist');
+    if (index == null) {
+      return null;
+    }
 
     return {...this._mimos[index]};
   }
@@ -79,7 +79,9 @@ export default class MimoManager {
     logger.debug(`sendMimo: [_mimo = %s]`, _mimo);
 
     const user = this._stateManager.getUser();
-    assert(user.role == 'customer', 'sendMimo expects customer.');
+    if (user.role != 'customer') {
+      return;
+    }
 
     // Construct the mimo expected by the Server instance.
     const mimo = {
@@ -107,7 +109,10 @@ export default class MimoManager {
     logger.debug(`MimoManager.rejectMimo: [mUid = %s]`, mUid);
 
     const index = binarySearch(this._mimos, this._mimoCmp, mUid);
-    assert(index !== null, 'Mimo in rejectMimo must exist');
+    if (index == null) {
+      return;
+    }
+
     this._mimos.splice(index, 1);
 
     await this._server.removeUserPendingMimoRef(mUid);
@@ -128,7 +133,9 @@ export default class MimoManager {
 
     const mimo = this.getPendingMimo(mUid);
     const user = this._stateManager.getUser();
-    assert(user.role == 'employee', 'acceptMimo expects employee.');
+    if (user.role != 'employee') {
+      return;
+    }
 
     await this._server.acceptMimo(mUid, mimo);
   }
@@ -149,7 +156,9 @@ export default class MimoManager {
       mimo);
 
     const user = this._stateManager.getUser();
-    assert(user.role == 'customer', '_onMimoCustomer expects customer.');
+    if (user.role != 'customer') {
+      return;
+    }
 
     this._mimos.push({...mimo, uid: mUid});
 
@@ -173,7 +182,9 @@ export default class MimoManager {
       mimo);
 
     const user = this._stateManager.getUser();
-    assert(user.role == 'employee', '_onMimoCustomer expects customer.');
+    if (user.role != 'employee') {
+      return;
+    }
 
     // Mimo is not pending: should be removed from this list.
     if (!mimo.status.pending) {
@@ -202,10 +213,15 @@ export default class MimoManager {
       [mimo = %s]`, mUid, mimo);
 
     const user = this._stateManager.getUser();
-    assert(user.role == 'employee', '_onMimoAcceptedEmployee expects employee.');
+    if (user.role != 'employee') {
+      return;
+    }
 
     const index = binarySearch(this._mimos, this._mimoCmp, mUid);
-    assert(index !== null, 'Mimo in _onMimoAcceptedEmployee must exist');
+    if (index == null) {
+      return;
+    }
+
     this._mimos.splice(index, 1);
 
     await this._server.removeUserPendingMimoRef(mUid);
@@ -236,7 +252,9 @@ export default class MimoManager {
       [mimo = %s]`, mUid, mimo);
 
     const user = this._stateManager.getUser();
-    assert(user.role == 'customer');
+    if (user.role != 'customer') {
+      return;
+    }
 
     const cUid = mimo.status.accepted.conversation;
     const uUid = mimo.status.accepted.employee;

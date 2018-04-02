@@ -32,8 +32,6 @@ import {
   getMimoPath,
 } from '../util/Helpers';
 
-import assert from 'assert';
-
 /**
  * Implementation of a Server interface, based on the Firebase backend.
  * The interface was designed with Firebase in mind, so this is a very

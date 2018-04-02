@@ -3,8 +3,6 @@ import { Permissions, Notifications } from 'expo';
 import { binarySearch } from '../util/Helpers';
 import { logger } from '../util/Logger';
 
-import assert from 'assert';
-
 export default class PushManager {
   constructor(stateManager, server, options) {
     logger.debug(`PushManager.constructor: [options = %s]`, options);

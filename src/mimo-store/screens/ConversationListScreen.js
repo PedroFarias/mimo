@@ -211,7 +211,7 @@ export default class ConversationListScreen extends React.Component {
       const bTimestamp = b.messages.length > 0 ?
         b.messages[b.messages.length - 1].timestamp : 0;
 
-      return aTimestamp < bTimestamp;
+      return aTimestamp > bTimestamp;
     }
     conversations.sort(cmpFunc);
 

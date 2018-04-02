@@ -7,8 +7,6 @@ import ConversationManager from './ConversationManager';
 import MimoManager from './MimoManager';
 import PushManager from './PushManager';
 
-import assert from 'assert';
-
 /**
  * Manages the state and general interactions with a backend object. Provides
  * functionality that any component can request, and triggers a re-render of

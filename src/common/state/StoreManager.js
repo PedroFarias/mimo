@@ -1,8 +1,6 @@
 import { binarySearch } from '../util/Helpers';
 import { logger } from '../util/Logger';
 
-import assert from 'assert';
-
 export default class StoreManager {
   constructor(stateManager, server, options) {
     logger.debug(`StoreManager.constructor: [options = %s]`, options);
@@ -53,7 +51,9 @@ export default class StoreManager {
     logger.debug(`StoreManager.getStore: [sUid = %s]`, sUid);
 
     const index = binarySearch(this._stores, this._storeCmp, sUid);
-    assert(index !== null, 'Store in getStore must exist');
+    if (index == null) {
+      return null;
+    }
 
     return {...this._stores[index]};
   }
@@ -104,7 +104,9 @@ export default class StoreManager {
       sUid, store);
 
     const index = binarySearch(this._stores, this._storeCmp, sUid);
-    assert(index !== null, 'Store in _onStoreChanged must exist');
+    if (index == null) {
+      return;
+    }
 
     this._stores[index] = {...store, uid: sUid};
 

@@ -305,7 +305,7 @@ export default class Chat extends React.Component {
     // messages; this is expected in case we can't connect to the server,
     // for instance.
     const cmpFunc = (a, b) => {
-      return isNaN(b.timestamp) ? 1 : a.timestamp > b.timestamp;
+      return isNaN(b.createdAt) ? 1 : a.createdAt > b.createdAt;
     };
 
     // Converts the messages from the state manager to whatever the GiftedChat
