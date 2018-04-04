@@ -371,7 +371,9 @@ export default class Server {
   getTimestamp = () => {}
 
   /**
-   * Get a new unique identifier from the server.
+   * Get a new unique identifier from the server. This unique identifier
+   * MUST be increasing and sorted lexicographically; we suggest the Firebase
+   * push method.
    *
    * @return
    *  A string corresponding to the unique identifier.
