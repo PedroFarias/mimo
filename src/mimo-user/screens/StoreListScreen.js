@@ -110,24 +110,23 @@ export default class StoreListScreen extends React.Component {
   _onToggle = (sUid) => {
     console.log(Object.keys(this.selectedStores));
     // Deal with the mimo salesperson case separately.
-    if (sUid == '0') {
-      if ('0' in this.selectedStores) {
-        delete this.selectedStores['0'];
+    if (sUid == '-') {
+      if ('-' in this.selectedStores) {
+        delete this.selectedStores['-'];
         this.forceUpdate();
         return;
       }
 
-      console.log('0 not in');
       for (let store of Object.keys(this.selectedStores)) {
         delete this.selectedStores[store];
       }
-      this.selectedStores['0'] = true;
+      this.selectedStores['-'] = true;
       this.forceUpdate();
       return;
     }
 
-    if ('0' in this.selectedStores) {
-      delete this.selectedStores['0'];
+    if ('-' in this.selectedStores) {
+      delete this.selectedStores['-'];
       this.selectedStores[sUid] = true;
 
       this.forceUpdate();

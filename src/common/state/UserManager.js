@@ -118,6 +118,12 @@ export default class UserManager {
       this._users[index] = {...user, uid: uUid};
     }
 
+    // FIXME: Add the user in the correct place in the array, instead of
+    // forcefully sorting it. Or, keep this a better data structure, or
+    // anything really. This is because users are requested fairly out-of-
+    // order, and then it's screwing up the binary search.
+    this._users.sort(this._userCmp);
+
     this._stateManager.updateComponents();
   }
 

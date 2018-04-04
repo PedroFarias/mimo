@@ -107,6 +107,17 @@ const binarySearch = (list, cmpFunc, value) => {
     }
   }
 
+  // FIXME: Last resort. This should not be ever called, but in case something
+  // goes wrong with the ordering (due to most likely a bug in server.getUid),
+  // then this will at least try it again.
+  for (let [index, elt] of list.entries()) {
+    console.log(index);
+    console.log(elt);
+    if (cmpFunc(elt, value) == 0) {
+      return index;
+    }
+  }
+
   return null;
 };
 
