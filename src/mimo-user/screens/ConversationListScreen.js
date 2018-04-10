@@ -28,8 +28,7 @@ class ConversationItem extends React.Component {
   render() {
     const conversation = this.props.conversation;
     const messages = conversation.messages;
-    const lastMessage = messages.length > 0 ? messages[messages.length - 1] :
-      null;
+    const lastMessage = conversation.lastMessage;
 
     // Show message as read if I'm marked as someone who read it.
     const read = lastMessage == null ||
@@ -143,7 +142,6 @@ export default class ConversationListScreen extends React.Component {
       cUid: conversation.uid,
       userName: user.firstName + ' ' + user.lastName,
       userPhoto: user.photo,
-      messages: conversation.messages,
       canBlock: stateManager.getCurrentUser().role == 'customer',
     });
   }
@@ -207,16 +205,12 @@ export default class ConversationListScreen extends React.Component {
     // Sort conversations by their timestamps. It's not very easy, or maybe
     // even possible/desirable, to do this on the StateManager.
     const conversations = this._filter(stateManager.getConversations());
-    const cmpFunc = (a, b) => {
-      const aMessages = a.messages;
-      const bMessages = b.messages;
-      const aTimestamp = a.messages.length > 0 ?
-        a.messages[a.messages.length - 1].timestamp : 0;
-      const bTimestamp = b.messages.length > 0 ?
-        b.messages[b.messages.length - 1].timestamp : 0;
 
-      return aTimestamp > bTimestamp;
-    }
+    const cmpFunc = (a, b) => {
+      const aTimestamp = (a.lastMessage != null) ? a.lastMessage.timestamp : 0;
+      const bTimestamp = (b.lastMessage != null) ? b.lastMessage.timestamp : 0;
+      return aTimestamp < bTimestamp;
+    };
     conversations.sort(cmpFunc);
 
     return (

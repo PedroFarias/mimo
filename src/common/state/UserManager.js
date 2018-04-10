@@ -17,7 +17,7 @@ export default class UserManager {
      * this._users contains information on users (the ones we have conversations
      * with).
      */
-    this._users = [];
+    this._users = new Map();
 
     // Registers callback on authentication with server.
     this._server.registerOnLoginCallback(this._onLogin);
@@ -58,14 +58,11 @@ export default class UserManager {
       return this.getCurrentUser();
     }
 
-    const index = binarySearch(this._users, this._userCmp, uUid);
-
-    // User may not have been loaded yet: this all depends on ordering.
-    if (index == null) {
+    if (!this._users.has(uUid)) {
       return null;
     }
 
-    return {...this._users[index]};
+    return {...this._users.get(uUid)};
   }
 
   /**
@@ -111,18 +108,7 @@ export default class UserManager {
     logger.debug(`UserManager._onUser: [uUid = %s], [user = %s]`, uUid,
       user);
 
-    const index = binarySearch(this._users, this._userCmp, uUid);
-    if (index == null) {
-      this._users.push({...user, uid: uUid});
-    } else {
-      this._users[index] = {...user, uid: uUid};
-    }
-
-    // FIXME: Add the user in the correct place in the array, instead of
-    // forcefully sorting it. Or, keep this a better data structure, or
-    // anything really. This is because users are requested fairly out-of-
-    // order, and then it's screwing up the binary search.
-    this._users.sort(this._userCmp);
+    this._users.set(uUid, {...user, uid: uUid});
 
     this._stateManager.updateComponents();
   }
@@ -154,7 +140,7 @@ export default class UserManager {
     logger.debug(`UserManager._onLogout`);
 
     this._auth = {};
-    this._users = [];
+    this._users = new Map();
     this._stateManager.updateComponents();
   }
 }

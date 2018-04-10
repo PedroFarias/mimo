@@ -193,6 +193,11 @@ export default class MimoListScreen extends React.Component {
   render() {
     const mimos = this._filter(stateManager.getPendingMimos());
 
+    const cmpFunc = (a, b) => {
+      return a.timestamp < b.timestamp;
+    };
+    mimos.sort(cmpFunc);
+
     return (
       <View style={styles.layout.container}>
         <TopBar

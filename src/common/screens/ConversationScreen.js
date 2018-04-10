@@ -72,8 +72,10 @@ export default class ConversationScreen extends React.Component {
     const cUid = params.cUid;
     const userName = params.userName;
     const userPhoto = params.userPhoto;
-    const messages = params.messages;
     const canBlock = params.canBlock;
+
+    const conversation = stateManager.getConversation(cUid);
+    const messages = conversation.messages;
 
     const middleView = (
       <View style={styles.layout.user}>

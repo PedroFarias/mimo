@@ -14,7 +14,7 @@ export default class StoreManager {
      * it is possible that in the future, we'd like to fetch that information
      * only when needed. This structure also keeps pagination information.
      */
-    this._stores = [];
+    this._stores = new Map();
 
     // Registers the two callbacks: stores added, and stores changed.
     this._server.registerOnLoginCallback(this._onLogin);
@@ -50,12 +50,11 @@ export default class StoreManager {
   getStore = (sUid) => {
     logger.debug(`StoreManager.getStore: [sUid = %s]`, sUid);
 
-    const index = binarySearch(this._stores, this._storeCmp, sUid);
-    if (index == null) {
+    if (!this._stores.has(sUid)) {
       return null;
     }
 
-    return {...this._stores[index]};
+    return {...this._stores.get(sUid)};
   }
 
   /**
@@ -68,7 +67,8 @@ export default class StoreManager {
   getStores = () => {
     logger.debug(`StoreManager.getStores`);
 
-    return [...this._stores];
+    logger.debug(`%s`, [...this._stores.values()]);
+    return Array.from(this._stores.values());
   }
 
   /**
@@ -85,7 +85,8 @@ export default class StoreManager {
     logger.debug(`StoreManager._onStore: [sUid = %s], [store = %s]`, sUid,
       store);
 
-    this._stores.push({...store, uid: sUid});
+    this._stores.set(sUid, {...store, uid: sUid});
+
     this._stateManager.updateComponents();
   }
 
@@ -103,12 +104,7 @@ export default class StoreManager {
     logger.debug(`StoreManager._onStoreChanged: [sUid = %s], [store = %s]`,
       sUid, store);
 
-    const index = binarySearch(this._stores, this._storeCmp, sUid);
-    if (index == null) {
-      return;
-    }
-
-    this._stores[index] = {...store, uid: sUid};
+    this._stores.set(sUid, {...store, uid: sUid});
 
     this._stateManager.updateComponents();
   }
@@ -137,7 +133,7 @@ export default class StoreManager {
   _onLogout = (user) => {
     logger.debug(`StoreManager._onLogout`);
 
-    this._stores = [];
+    this._stores = new Map();
     this._stateManager.updateComponents();
   }
 }

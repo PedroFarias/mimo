@@ -13,7 +13,7 @@ export default class MimoManager {
      * a customer, this is not used for anything. If the user is an employee,
      * this consists of all pending mimos.
      */
-    this._mimos = [];
+    this._mimos = new Map();
 
     if (options.role == 'customer') {
       this._server.registerOnLoginCallback(this._onLogin);
@@ -46,12 +46,11 @@ export default class MimoManager {
   getPendingMimo = (mUid) => {
     logger.debug(`MimoManager.getPendingMimo: [mUid = %s]`, mUid);
 
-    const index = binarySearch(this._mimos, this._mimoCmp, mUid);
-    if (index == null) {
+    if (!this._mimos.has(mUid)) {
       return null;
     }
 
-    return {...this._mimos[index]};
+    return {...this._mimos.get(mUid)};
   }
 
   /**
@@ -63,7 +62,7 @@ export default class MimoManager {
   getPendingMimos = () => {
     logger.debug(`MimoManager.getPendingMimos`);
 
-    return [...this._mimos];
+    return Array.from(this._mimos.values());
   }
 
   /**
@@ -108,12 +107,11 @@ export default class MimoManager {
   rejectMimo = async (mUid) => {
     logger.debug(`MimoManager.rejectMimo: [mUid = %s]`, mUid);
 
-    const index = binarySearch(this._mimos, this._mimoCmp, mUid);
-    if (index == null) {
+    if (!this._mimos.has(mUid)) {
       return;
     }
 
-    this._mimos.splice(index, 1);
+    this._mimos.delete(mUid);
 
     await this._server.removeUserPendingMimoRef(mUid);
     this._stateManager.updateComponents();
@@ -160,7 +158,7 @@ export default class MimoManager {
       return;
     }
 
-    this._mimos.push({...mimo, uid: mUid});
+    this._mimos.set(mUid, {...mimo, uid: mUid});
 
     // It may be redundant to add the mimo and then call onAcceptedCustomer,
     // but this avoids having to change API calls to the server, so be it.
@@ -192,7 +190,7 @@ export default class MimoManager {
       return;
     }
 
-    this._mimos.push({...mimo, uid: mUid});
+    this._mimos.set(mUid, {...mimo, uid: mUid});
     this._stateManager.updateComponents();
   }
 
@@ -217,12 +215,11 @@ export default class MimoManager {
       return;
     }
 
-    const index = binarySearch(this._mimos, this._mimoCmp, mUid);
-    if (index == null) {
+    if (!this._mimos.has(mUid)) {
       return;
     }
 
-    this._mimos.splice(index, 1);
+    this._mimos.delete(mUid);
 
     await this._server.removeUserPendingMimoRef(mUid);
     this._stateManager.updateComponents();
@@ -290,7 +287,7 @@ export default class MimoManager {
   _onLogout = () => {
     logger.debug(`MimoManager._onLogout`);
 
-    this._mimos = [];
+    this._mimos = new Map();
     this._stateManager.updateComponents();
   }
 }

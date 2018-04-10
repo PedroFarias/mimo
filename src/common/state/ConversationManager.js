@@ -13,7 +13,7 @@ export default class ConversationManager {
      * is involved in. This includes the conversation unique identifier, the
      * recipient identifier, and messages.
      */
-    this._conversations = [];
+    this._conversations = new Map();
 
     /*
      * this._pendingMessages keeps track of messages that were sent, but not
@@ -80,15 +80,29 @@ export default class ConversationManager {
    */
   getConversation = (cUid) => {
     logger.debug(`ConversationManager.getConversation: [cUid = %s]`, cUid);
-    logger.debug(`%s`, this._conversations);
 
-    const index = binarySearch(this._conversations, this._conversationCmp,
-      cUid);
-    if (index == null) {
+    if (!this._conversations.has(cUid)) {
       return null;
     }
 
-    return {...this._conversations[index]};
+    const conversation = this._conversations.get(cUid);
+    const messages = Object.values(conversation.messages);
+
+    let lastMessage = null;
+    let timestamp = null;
+
+    for (let message of messages) {
+      if (message.timestamp > timestamp) {
+        timestamp = message.timestamp;
+        lastMessage = message;
+      }
+    }
+
+    return {
+      ...conversation,
+      messages: messages,
+      lastMessage: lastMessage,
+    };
   }
 
   /**
@@ -101,7 +115,29 @@ export default class ConversationManager {
   getConversations = () => {
     logger.debug(`ConversationManager.getConversations`);
 
-    return [...this._conversations];
+    const conversations = Array.from(this._conversations.values()).map(
+      (conversation) => {
+        const messages = Object.values(conversation.messages);
+
+        let lastMessage = null;
+        let timestamp = null;
+
+        for (let message of messages) {
+          if (message.timestamp > timestamp) {
+            timestamp = message.timestamp;
+            lastMessage = message;
+          }
+        }
+
+        return {
+          ...conversation,
+          messages: messages,
+          lastMessage: lastMessage,
+        };
+      }
+    );
+
+    return conversations;
   }
 
   /**
@@ -115,7 +151,11 @@ export default class ConversationManager {
   blockConversation = async (cUid) => {
     logger.debug(`ConversationManager.blockConversation: [cUid = %s]`, cUid);
 
-    const conversation = this.getConversation(cUid);
+    if (!this._conversations.has(cUid)) {
+      return null;
+    }
+    const conversation = this._conversations.get(cUid);
+
     await this._server.blockConversation(cUid, conversation);
 
     this._stateManager.updateComponents();
@@ -141,19 +181,16 @@ export default class ConversationManager {
 
     const mUid = this._server.getUid();
 
+    if (!this._conversations.has(cUid)) {
+      return null;
+    }
+    const conversation = this._conversations.get(cUid);
+
     // Adds a fake timestamp, since we don't have the accurate one yet.
     message.timestamp = Date.now();
 
     this._pendingMessages[mUid] = message;
-
-    const conversation = this.getConversation(cUid);
-
-    // Conversation does not exist anymore; do nothing.
-    if (conversation == null) {
-      return;
-    }
-
-    conversation.messages.push({...message, uid: mUid});
+    conversation.messages[mUid] = {...message, uid: mUid};
 
     this._stateManager.updateComponents();
 
@@ -202,7 +239,7 @@ export default class ConversationManager {
     logger.debug(`ConversationManager._onConversation: [cUid = %s] \
       [conversation = %s]`, cUid, conversation);
 
-    this._conversations.push({...conversation, messages: [], uid: cUid});
+    this._conversations.set(cUid, {...conversation, messages: {}, uid: cUid});
     this._stateManager.updateComponents();
   }
 
@@ -218,14 +255,14 @@ export default class ConversationManager {
     logger.debug(`ConversationManager._onConversationRemoved: [cUid = %s]`,
       cUid);
 
-    const index = binarySearch(this._conversations, this._conversationCmp,
-      cUid);
-    if (index == null) {
+    if (!this._conversations.has(cUid)) {
       logger.debug(`Received a conversation child_remove for "%s", but \
         conversation was not in internal state. Ignoring.`, cUid);
+      return;
     }
 
-    this._conversations.splice(index, 1);
+    this._conversations.delete(cUid);
+
     this._stateManager.updateComponents();
   }
 
@@ -260,8 +297,11 @@ export default class ConversationManager {
       }
     }
 
-    const conversation = this.getConversation(cUid);
-    conversation.messages.push({...message, uid: mUid});
+    if (!this._conversations.has(cUid)) {
+      return null;
+    }
+    const conversation = this._conversations.get(cUid);
+    conversation.messages[mUid] = {...message, uid: mUid};
 
     // Add message to list of unread messages.
     if (!(cUid in this._unreadMessages)) {
@@ -301,26 +341,17 @@ export default class ConversationManager {
       this._unreadMessages[cUid].add(mUid);
     }
 
-    // Would like to use getConversation, but that's going to return a copy,
-    // so here it goes. Copy & Paste at its prime.
-    const cIndex = binarySearch(this._conversations, this._conversationCmp,
-      cUid);
-
-    // We don't have the conversation anymore, either it has been blocked,
-    // or something else. Ignore.
-    if (cIndex == null) {
-      return;
-    }
-    const conversation = this._conversations[cIndex];
-
-    const mIndex = binarySearch(conversation.messages, this._messageCmp, mUid);
-    // We don't have the conversation anymore, either it has been blocked,
-    // or something else. Ignore.
-    if (mIndex == null) {
-      return;
+    if (!this._conversations.has(cUid)) {
+      logger.debug(`_onMessageChanged for a conversation that does not exist.`);
+      return null;
     }
 
-    conversation.messages[mIndex] = {...message, uid: mUid};
+    const conversation = this._conversations.get(cUid);
+    if (conversation == null) {
+      return null;
+    }
+
+    conversation.messages[mUid] = {...message, uid: mUid};
 
     this._stateManager.updateComponents();
   }
@@ -349,7 +380,7 @@ export default class ConversationManager {
   _onLogout = () => {
     logger.debug(`ConversationManager._onLogout`);
 
-    this._conversations = [];
+    this._conversations = new Map();
     this._pendingMessages = {};
     this._unreadMessages = {};
 
