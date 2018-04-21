@@ -20,6 +20,9 @@
     "ios": {
 	  "supportsTablet": true,
       "bundleIdentifier": "io.mimoapp.mimostore",
+      "infoPlist": {
+          "NSCameraUsageDescription": "Mimo deseja utilizar sua câmera para enviar fotos de produtos para clientes."
+      },
       "config": {
         "googleSignIn": {
           "reservedClientId": "com.googleusercontent.apps.81398270004-cu6s6bcggde59p5j7l67im812fk78igc"
