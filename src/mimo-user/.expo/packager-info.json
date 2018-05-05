@@ -1,8 +1,8 @@
 {
-  "packagerPort": 19001,
-  "packagerPid": 1064,
-  "expoServerPort": 19000,
-  "expoServerNgrokUrl": "https://mk-phk.mimoapp.mimo-user.exp.direct",
-  "packagerNgrokUrl": "https://packager.mk-phk.mimoapp.mimo-user.exp.direct",
-  "ngrokPid": 1075
+  "packagerPort": null,
+  "packagerPid": null,
+  "expoServerPort": null,
+  "expoServerNgrokUrl": null,
+  "packagerNgrokUrl": null,
+  "ngrokPid": null
 }

@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "mimo-user",
+    "name": "mimo",
     "androidStatusBar": {
         "backgroundColor": "#000"
     },
@@ -9,7 +9,7 @@
     "privacy": "public",
     "sdkVersion": "25.0.0",
     "platforms": ["ios", "android"],
-    "version": "1.0.2",
+    "version": "1.0.4",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "splash": {
