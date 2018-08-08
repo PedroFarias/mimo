@@ -1,4 +1,4 @@
-import { ImagePickerm, LinearGradient } from 'expo';
+import { ImagePickerm } from 'expo';
 import PropTypes from 'prop-types';
 import React from 'react';
 import {
