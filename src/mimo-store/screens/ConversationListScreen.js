@@ -42,7 +42,11 @@ class ConversationItem extends React.Component {
         if (lastMessage.sender == 'system') {
           message = '[Mimo]: ' + message;
         }
-      } else {
+      }
+      if(lastMessage.content.audio != null){
+          message = 'Audio';
+      }
+      else {
         message = 'Imagem';
       }
     }

@@ -7,6 +7,7 @@ import {
   getConversationPath,
   getImagePath,
   getMimosPath,
+  getAudioPath,
   getStoreEmployeesPath,
   getUserConversationPath,
   getUserPendingMimoPath,
@@ -36,8 +37,10 @@ app.use(validateFirebaseToken);
 // For uploadImage, run all necessary middleware to parse
 app.use('/uploadImage', parseRawBody);
 app.use('/uploadImage', parseImage);
+
+app.use('/uploadAudio', parseRawBody);
+app.use('/uploadAudio', parseImage);
 app.post('/uploadImage', async (req, res, next) => {
-  console.log('uploadImage');
   console.log(req.fields);
   if (req.fields.cUid == null || req.fields.mUid == null ||
     req.files == null) {
@@ -61,6 +64,45 @@ app.post('/uploadImage', async (req, res, next) => {
    */
   blobStream.on('error', (error) => {
     logger.error(`Could not upload image at path "%s". Error: %s`, iPath,
+      error);
+    res.status(400).send('Bad Request');
+    return;
+  });
+
+  blobStream.on('finish', async () => {
+    const metadata = await fileUpload.getMetadata()
+    res.status(200).json(metadata);
+    return next();
+  });
+
+  blobStream.end(file.buffer);
+});
+
+app.post('/uploadAudio', async (req, res, next) => {
+  console.log('uploadImage');
+  console.log(req.fields);
+  if (req.fields.cUid == null || req.fields.mUid == null ||
+    req.files == null) {
+    res.status(400).send('Bad Request');
+    return;
+  }
+
+  const cUid = req.fields.cUid;
+  const mUid = req.fields.mUid;
+  const file = req.files.file[0];
+  const fs = admin.storage().bucket();
+
+  const iPath = getAudioPath(cUid, mUid);
+  const fileUpload = fs.file(iPath);
+  const blobStream = fileUpload.createWriteStream({
+    metadata: { contentType: 'audio/aac', },
+  });
+
+  /**
+   * Here I leave my comment on how shitty Node.js is. Honestly ES6 is better.
+   */
+  blobStream.on('error', (error) => {
+    logger.error(`Could not upload audio at path "%s". Error: %s`, iPath,
       error);
     res.status(400).send('Bad Request');
     return;
@@ -224,7 +266,7 @@ const onMessageSendPush = async (params, snapshot) => {
       error.toString());
   }
 };
-
+const devApi = functions.https.onRequest(app)
 const api = functions.https.onRequest(app);
 const storeEmployee = functions.database
   .ref('/stores/private/{sUid}/employees/{eUid}').onCreate(async (event) => {
@@ -235,4 +277,5 @@ const messagePushNotification = functions.database
   await onMessageSendPush(event.params, event.data);
 });
 
-export { api, storeEmployee, messagePushNotification };
+
+export { api, storeEmployee, messagePushNotification, devApi };

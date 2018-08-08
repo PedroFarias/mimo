@@ -28,7 +28,7 @@ import {
   getConversationMessagePath,
   getConversationMessageReadByPath,
   getConversationMessageReadByUserPath,
-  getImagePath,
+  getAudioPath,
   getMimoPath,
 } from '../util/Helpers';
 
@@ -534,7 +534,6 @@ export default class FirebaseServer extends Server {
     assertMessage(message);
 
     const mPath = getConversationMessagePath(cUid, mUid);
-
     try {
       // If we have an image, upload it and set the URL of the uploaded image.
       if (message.content.image != null) {
@@ -543,7 +542,20 @@ export default class FirebaseServer extends Server {
         message.content.image = downloadUrl;
       }
 
-      await this._db.child(mPath).set(message);
+      //If we have an audio, upload it and set the URL of the uploaded audio.
+      if(message.content.audio != null){
+        try{
+        const audioDownloadUrl = await this._uploadAudio(cUid, mUid, message.content.audio) 
+         message.content.audio = audioDownloadUrl;
+         console.log(audioDownloadUrl)
+        }
+        catch(error){
+          console.log(error)
+        }
+      }
+      if (message.content){
+        await this._db.child(mPath).set(message);
+      }
     } catch (error) {
       logger.error(`Could not send message "%s" on conversation "%s". Error: \
         %s.`, mUid, cUid, error.toString());
@@ -762,7 +774,8 @@ export default class FirebaseServer extends Server {
     try {
       await this._db.child(uPath).update({
         pushNotificationToken: token,
-      });
+      })
+      ;
     } catch (error) {
       logger.error(`Could not save push notification info. Error: %s`,
         error.toString());
@@ -1014,6 +1027,45 @@ export default class FirebaseServer extends Server {
     const downloadUrl = await this._fs.child(iPath).getDownloadURL();
     return downloadUrl;
   }
+
+    /**
+   * Uploads an audio from a given file path.
+   *
+   * @param cUid
+   *  The conversation unique identifier in which this audio belongs.
+   * @param mUid
+   *  The message unique identifier containing this audio.
+   * @param image
+   *  The image URI in the device.
+   * @throws
+   *  Throws error if the upload fails.
+   * @return
+   *  A usable URL for the uploaded audio.
+   */
+
+  _uploadAudio = async (cUid, mUid, image) => {
+    logger.debug('[FIREBASAE SERVER] Uploading Audio')
+    const headers = {
+      Accept: 'application/json',
+      'Content-Type': 'multipart/form-data',
+    };
+    const body = new FormData();
+    body.append('audio', {
+      uri: image,
+      name: mUid,
+      type: 'audio/aac'
+    });
+    body.append('cUid', cUid);
+    body.append('mUid', mUid);
+
+    await this._sendCloudFunctionRequest('devApi/uploadAudio', 'POST', headers,
+      body);
+
+    const iPath = getAudioPath(cUid, mUid);
+    const downloadUrl = await this._fs.child(iPath).getDownloadURL();
+    return downloadUrl;
+  }
+
 
   /**
    * Sends a cloud function request specified to a path, using a given method,

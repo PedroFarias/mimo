@@ -181,6 +181,7 @@ export default class ConversationManager {
 
     const mUid = this._server.getUid();
 
+
     if (!this._conversations.has(cUid)) {
       return null;
     }
@@ -196,6 +197,7 @@ export default class ConversationManager {
 
     // Add the real message timestamp for Firebase.
     message.timestamp = this._server.getTimestamp();
+
 
     await this._server.sendMessage(cUid, mUid, message);
   }

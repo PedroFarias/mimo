@@ -1,7 +1,9 @@
-import { ImagePicker } from 'expo';
+import { ImagePickerm, LinearGradient } from 'expo';
 import PropTypes from 'prop-types';
 import React from 'react';
 import {
+  Animated,
+  Buttn,
   Image,
   KeyboardAvoidingView,
   Modal,
@@ -10,20 +12,39 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
+  TouchableWithoutFeedback,
   ViewPropTypes,
   View,
 } from 'react-native';
+
+import Expo from 'expo';
 
 import {
   Bubble,
   Day,
   GiftedChat,
+  Composer,
+  Message
 } from 'react-native-gifted-chat';
 
 import TopBar from '../components/TopBar';
 import { stateManager } from '../state/StateManager';
 import { Colors, Heights } from '../util/Constants';
 import Actions from './Actions';
+import { logger } from '../util/Logger';
+import {milliToSecondsAndMinutesFormat, generateUID} from '../util/Helpers.js'
+
+import playIconRight from '../assets/icons/playRight.png';
+import playIconLeft from '../assets/icons/playLeft.png';
+
+import pauseIconRight from '../assets/icons/pauseRight.png';
+import pauseIconLeft from '../assets/icons/pauseLeft.png';
+
+
+import { FadeInView, BlinkingOpacity } from './Animations';
+import { Pan } from './Slider';
+
+
 
 /**
  * The send button component. The code here is very similar to what is already
@@ -32,8 +53,10 @@ import Actions from './Actions';
  */
 class Send extends React.Component {
   _onSend = () => {
-    this.props.onSend({text: this.props.text.trim()}, true);
+    this.props.onSend({ text: this.props.text.trim() }, true);
   }
+
+
 
   render() {
     const childIfText = this.props.children ? this.props.children[0] : null;
@@ -52,7 +75,7 @@ class Send extends React.Component {
         onPress={this._onSend}
         disabled={!canSend}
       >
-        { child !== null ? child : label }
+        {child !== null ? child : label}
       </TouchableOpacity>
     );
   }
@@ -84,6 +107,7 @@ class SystemMessage extends React.Component {
   }
 }
 
+
 /**
  * Custom actions show up when the user presses "+"; it allows access to the
  * camera and to the photo library.
@@ -99,6 +123,8 @@ class CustomActions extends React.Component {
    */
   _onCamera = (image) => this.props.onCamera(image);
 
+
+
   onActionsPress = () => {
     const options = ['Camera', 'Choose From Library', 'Cancel'];
     const cancelButtonIndex = options.length - 1;
@@ -107,24 +133,25 @@ class CustomActions extends React.Component {
       options,
       cancelButtonIndex,
     },
-    (buttonIndex) => {
-      switch (buttonIndex) {
-        case 0:
-          this._showCamera();
-          break;
-        case 1:
-          this._showLibrary();
-          break;
-        default:
-          break;
-      }
-    });
+      (buttonIndex) => {
+        switch (buttonIndex) {
+          case 0:
+            this._showCamera();
+            break;
+          case 1:
+            this._showLibrary();
+            break;
+          default:
+            break;
+        }
+      });
   }
 
   /**
    * Callback triggered when user requests the library.
    */
   _showLibrary = async () => {
+
     let image = await ImagePicker.launchImageLibraryAsync({
       allowsEditting: false,
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -176,7 +203,7 @@ class CustomActions extends React.Component {
     const options = {
       'Camera': () => { this._showCamera() },
       'Choose from Library': () => { this._showLibrary() },
-      'Cancel': () => {},
+      'Cancel': () => { },
     };
 
     return (
@@ -187,12 +214,435 @@ class CustomActions extends React.Component {
   }
 }
 
+/*
+ * Recording action when user presses the microphone icon. 
+ * The component handle long-press tap, the creation of the audio file and the sending of it.
+ *
+ */
+
+class Microphone extends React.Component {
+
+  componentWillMount() {
+    this.isRecording = false;
+    this.recordingUI = false;
+    this.durationString = '0:00'
+  }
+
+  _toggleRecordingUI = () =>{
+    //Set the state manager to notify that there is a recording in the app.
+    this.recordingUI=  !this.recordingUI
+    this.forceUpdate()
+    this.props.prepareRecordingUI()
+
+  }
+
+
+  _askRecordingPermissions = async () => {
+    const { Permissions } = Expo;
+    const { status } = await Permissions.getAsync(Permissions.AUDIO_RECORDING)
+    logger.debug('Microphone permisiion', status)
+    if (status === 'denied') {
+      alert('É preciso ativar as permissões de microfone pare utilizar esse recurso.')
+    }
+    if (status != 'granted') {
+      try {
+        await Permissions.askAsync(Permissions.AUDIO_RECORDING)
+      }
+      catch (error) {
+        console.log(error)
+      }
+    }
+
+
+  }
+
+  _onPressIn = async () => {
+    logger.debug('Pressing Microphone In')
+
+    //Check if the user has granted permissions, if not we ask him.
+
+    this._toggleRecordingUI()
+
+    this._askRecordingPermissions()
+    
+    
+    const mode = {
+      interruptionModeIOS: Expo.Audio.INTERRUPTION_MODE_IOS_DO_NOT_MIX,
+      playsInSilentModeIOS: true, allowsRecordingIOS: true, shouldDuckAndroid: true,
+      interruptionModeAndroid: Expo.Audio.INTERRUPTION_MODE_ANDROID_DO_NOT_MIX
+    }
+    //We need to set Audio Mode before Recording (not written in documentation)
+    await stateManager.stopSounds()
+    await Expo.Audio.setAudioModeAsync(mode)
+
+
+    /*
+    Recording Options for Audio Recording. See Expo Docs:
+    https://docs.expo.io/versions/latest/sdk/audio#recording-sounds
+
+    */
+    const RecordingOptions = {
+      android: {
+        extension: '.m4a',
+        outputFormat: Expo.Audio.RECORDING_OPTION_ANDROID_OUTPUT_FORMAT_AAC_ADTS,
+        audioEncoder: Expo.Audio.RECORDING_OPTION_ANDROID_AUDIO_ENCODER_DEFAULT,
+        sampleRate: 44100,
+        numberOfChannels: 2,
+        bitRate: 128000,
+      },
+      ios: {
+        extension: '.m4a',
+        audioQuality: Expo.RECORDING_OPTION_IOS_AUDIO_QUALITY_MAX,
+        outputFormat: Expo.Audio.RECORDING_OPTION_IOS_OUTPUT_FORMAT_MPEG4AAC,
+        sampleRate: 44100,
+        numberOfChannels: 2,
+        bitRate: 128000,
+        linearPCMBitDepth: 16,
+        linearPCMIsBigEndian: false,
+        linearPCMIsFloat: false,
+      },
+    };
+
+    this.recordingInstance = new Expo.Audio.Recording();
+
+    //Event listener for Recording Instance Status
+    this.recordingInstance.setOnRecordingStatusUpdate((recordingStatus) => {
+
+      this.status = recordingStatus
+      if (recordingStatus.isRecording){
+        //Recording Time to be displayed
+        this.durationString = milliToSecondsAndMinutesFormat(recordingStatus.durationMillis)
+      }
+
+
+      if (recordingStatus.isRecording && !this.isRecording) {
+        //Call onRecording() chat method for setting Recording and updating the UI. See Chat class.
+        this.isRecording = true
+        this.forceUpdate()
+
+        return
+      }
+      if (!recordingStatus.isRecording && this.isRecording) {
+        //Call onRecording() chat method for setting Recording and updating the UI. See Chat class.
+        this.isRecording = false
+        this.forceUpdate()
+        return
+      }
+      this.forceUpdate()
+      return
+
+    })
+    try {
+      await this.recordingInstance.prepareToRecordAsync(RecordingOptions)
+      await this.recordingInstance.startAsync()
+
+      logger.log('Recording')
+
+    }
+    catch (error) {
+      console.log(error)
+    }
+
+
+
+  }
+
+
+  _onPressOut = async () => {
+
+    console.log('on press out')
+    logger.debug('Pressing Microphone out')
+    if (this.recordingInstance && this.status.isRecording) {
+      try {
+        await this.recordingInstance.stopAndUnloadAsync()
+        logger.log('Recording Stopped')
+      }
+      catch (error) {
+        console.log(error)
+      }
+      await Expo.Audio.setAudioModeAsync({
+        interruptionModeIOS: Expo.Audio.INTERRUPTION_MODE_IOS_DO_NOT_MIX,
+        playsInSilentModeIOS: true, allowsRecordingIOS: false, shouldDuckAndroid: true,
+        interruptionModeAndroid: Expo.Audio.INTERRUPTION_MODE_ANDROID_DO_NOT_MIX
+      })
+      const uri = this.recordingInstance.getURI()
+
+
+      //Check if the audio duration is at least superior than 1s.
+      if (this.status.durationMillis > 1500 && this.status.isDoneRecording) {
+        try {
+
+          //await this._sendAudio(uri)
+
+          return;
+        }
+        catch (error) {
+          console.log(error)
+        }
+
+      }
+    }
+  }
+
+
+
+  _cancelRecording = async() =>{
+    
+    if(this.recordingInstance){
+      await this.recordingInstance.stopAndUnloadAsync()
+      this._toggleRecordingUI()
+      this.durationString = "0:00"
+    }
+
+  }
+
+  _onSendRecording = async() =>{
+    console.log('on press out')
+    logger.debug('Pressing Microphone out')
+    if (this.recordingInstance && this.status.isRecording) {
+      try {
+        await this.recordingInstance.stopAndUnloadAsync()
+        logger.log('Recording Stopped')
+      }
+      catch (error) {
+        console.log(error)
+      }
+      await Expo.Audio.setAudioModeAsync({
+        interruptionModeIOS: Expo.Audio.INTERRUPTION_MODE_IOS_DO_NOT_MIX,
+        playsInSilentModeIOS: true, allowsRecordingIOS: false, shouldDuckAndroid: true,
+        interruptionModeAndroid: Expo.Audio.INTERRUPTION_MODE_ANDROID_DO_NOT_MIX
+      })
+      const uri = this.recordingInstance.getURI()
+
+
+      //Check if the audio duration is at least superior than 1s.
+      if (this.status.durationMillis > 1500 && this.status.isDoneRecording) {
+        try {
+          logger.debug('Sending Audio Recording')
+          await this._sendAudio(uri)
+
+        }
+        catch (error) {
+          console.log(error)
+        }
+
+      }
+      this._toggleRecordingUI()
+    }
+  }
+
+  _sendAudio = async (uri) => {
+    //Prepare the message object to the State Manager Action
+    content = { audio: uri };
+    let readBy = {};
+    readBy[stateManager.getUser().uid] = true;
+
+    const message = {
+      content: content,
+      sender: stateManager.getUser().uid,
+      readBy: readBy,
+      timestamp: stateManager.getTimestamp(),
+    }
+    stateManager.sendMessage(this.props.cUid, message);
+
+  }
+
+  componentDidMount() {
+
+  }
+
+  render() {
+    if (this.recordingUI){
+    return (
+      <View style={this.recordingUI && {backgroundColor:'white', flex:1, alignContent:'center',alignItems:'center', flexDirection: 'row',  marginLeft:30, height:44}}>
+      
+
+      <TouchableOpacity style={styles.microphone.sendButton} onPress={this._onSendRecording} >
+        <Text style={styles.microphone.sendText}> Enviar </Text>
+      </TouchableOpacity>
+      
+        <TouchableOpacity onPress={this._cancelRecording} hitSlop={{top:5,left:5,bottom:5,right:5}} style={{flex:1, alignItems:'center'}}>
+      <Text style={styles.microphone.cancelText}> Cancelar </Text>
+        </TouchableOpacity>
+        <View style={{minWidth:50, marginLeft:10, alignItems:'flex-end', justifyContent:'flex-end'}}>
+        {Platform.OS === 'ios' ? 
+                <BlinkingOpacity duration={2000} initialOpacity={0.8} finalOpacity={0.2}>
+                  <Text style={styles.microphone.recordingDuration} > {this.durationString} </Text>
+                </BlinkingOpacity>   
+                :
+        <Text style={styles.microphone.recordingDuration} > {(this.durationString)} </Text>
+
+      }
+
+        </View>
+
+      <View  style={{flex:1, alignItems: 'center'}}    >
+        <View style={styles.microphone.iconWrapperOnRecording}>
+          <Image source={require('../assets/icons/microphoneWhite.png')} style={styles.microphone.iconOnRecording}></Image>
+        </View>
+      </View>
+      </View>
+
+    )
+  }
+  return(
+    <TouchableOpacity onLongPress={this._onLongPress} onPressIn={this._onPressIn}  hitSlop={{ top: 5, left: 5, bottom: 5, right: 5 }}   >
+    <Image source={require('../assets/icons/microphone.png')} style={styles.microphone.icon}></Image>
+  </TouchableOpacity>
+
+  )
+
+
+  }
+
+
+}
+class MessageAudio extends React.Component {
+
+
+  componentWillMount() {
+    this.isPlaying = false;
+    this.soundLoaded = false;
+
+    //Generate  a simple Uid for the audio manager.
+    this.audioManagerUid = generateUID()
+
+  }
+
+
+  _onPress = async () => {
+    //We check if there isn't a recording going on somewhere in the app.
+    if(!stateManager.getRecordingStatus()){
+
+    const mode = {
+      interruptionModeIOS: Expo.Audio.INTERRUPTION_MODE_IOS_DO_NOT_MIX,
+      playsInSilentModeIOS: true, allowsRecordingIOS: false, shouldDuckAndroid: true,
+      interruptionModeAndroid: Expo.Audio.INTERRUPTION_MODE_ANDROID_DO_NOT_MIX
+    }
+
+    Expo.Audio.setAudioModeAsync(mode)
+
+    //Wait until the audio file is downloaded. 
+    const soundLoaded = await this.soundLoaded
+    //Evaluate button status: if paused, play the audio, else pause the audio.
+    if (this.isPlaying === false) {
+      try {
+        stateManager.stopSounds()
+        console.log('play Sound Instance')
+        await this.soundInstance.playAsync();
+        return
+      }
+      catch (error) {
+        console.log(error)
+      }
+    }
+    else {
+      status = await this.soundInstance.getStatusAsync()
+      console.log(status)
+      await this.soundInstance.pauseAsync().then();
+      return
+
+    }
+
+  }
+  }
+  /*
+  *
+  *
+  */
+  async componentDidMount() {
+
+
+
+    this.soundInstance = new Expo.Audio.Sound();
+
+    //Mount sound instance and load Sound
+
+    //Playback Status Listener for changes
+    this.soundInstance.setOnPlaybackStatusUpdate((playbackStatus) => {
+      if (playbackStatus.isPlaying && !this.isPlaying) {
+        this.isPlaying = true
+        //Register the sound Instance to the Audio Manager so we know the Sound Instances that 
+        //are currently playing
+        stateManager.registerSound(this.audioManagerUid,this.soundInstance)
+        this.forceUpdate()
+        console.log('updating playing=true')
+        return
+      }
+      if (!playbackStatus.isPlaying && this.isPlaying) {
+        this.isPlaying = false
+        //Unregister the Sound from the Audio Manager State.
+        stateManager.unRegisterSound(this.audioManagerUid,this.soundInstance)
+        this.forceUpdate()
+        return
+      }
+
+    })
+
+    try {
+      this.soundLoaded = this.soundInstance.loadAsync({ uri: this.props.audioSource }).then(() => true)
+      await this.soundLoaded
+      const status = await this.soundInstance.getStatusAsync()
+      //Playback duration in Seconds
+      
+      this.playbackDurationString = milliToSecondsAndMinutesFormat(status.durationMillis)
+      this.forceUpdate()
+
+    }
+    catch (error) {
+      console.log(error)
+    }
+  }
+
+
+  async componentWillUnmount() {
+    status = await this.soundInstance.getStatusAsync()
+    if (status.isPlaying) {
+      this.soundInstance.unloadAsync()
+    }
+
+    //Unregister component in case we may have forgotten
+    stateManager.unRegisterSound(this.audioManagerUid,this.soundInstance)
+
+  }
+
+  render() {
+    console.log('Duration string',stateManager.getRecordingStatus())
+
+    if (this.isPlaying){
+    return (
+        <TouchableOpacity style={styles.messageAudio.wrapper} onPress={ this._onPress}  >
+          <Image source={this.props.position === 'right' ? pauseIconRight : pauseIconLeft} style={styles.messageAudio.icon}></Image>
+          <Text style={{ color: this.props.position==='right' ? "rgb(243,243,243)":"rgb(0,0,0)" , fontSize: 8 }}>{this.playbackDurationString}</Text>
+        </TouchableOpacity>
+    )
+  }
+  else{
+    return (
+      <TouchableOpacity style={styles.messageAudio.wrapper} onPress={this._onPress}  >
+        <Image source={this.props.position === 'right' ? playIconRight : playIconLeft} style={styles.messageAudio.icon}></Image>
+        <Text style={{ color: this.props.position==='right' ? "rgb(243,243,243)":"rgb(0,0,0)" , fontSize: 8 }}>{this.playbackDurationString}</Text>
+
+      </TouchableOpacity>
+  )
+
+  }
+
+  }
+
+}
+
 export default class Chat extends React.Component {
+
+  componentWillMount() {
+    this.recording = false
+  }
+
   /**
    * TODO: FIXME: This is a hack.
    */
   onSend = (messages) => {
-    content = {text: messages[0].text};
+    content = { text: messages[0].text };
     let readBy = {};
     readBy[stateManager.getUser().uid] = true;
 
@@ -209,7 +659,7 @@ export default class Chat extends React.Component {
    * Callback triggered when an image is chosen from the library.
    */
   _onLibrary = async (uri) => {
-    content = {image: uri};
+    content = { image: uri };
     let readBy = {};
     readBy[stateManager.getUser().uid] = true;
 
@@ -227,7 +677,7 @@ export default class Chat extends React.Component {
    * Callback triggered when an image is chosen from the camera.
    */
   _onCamera = async (uri) => {
-    content = {image: uri};
+    content = { image: uri };
     let readBy = {};
     readBy[stateManager.getUser().uid] = true;
 
@@ -241,26 +691,65 @@ export default class Chat extends React.Component {
     stateManager.sendMessage(this.props.cUid, message);
   }
 
+
+
+  _prepareRecordingUI = () => {
+    if (this.recording) {
+      this.recording = false
+    }
+    else {
+      this.recording = true
+    }
+    stateManager.toggleRecordingStatus()
+
+    this.forceUpdate()
+  }
+
   /**
    * Renders the custom actions: if we are on iOS, we use the CustomActions
    * component above; otherwise, we just use Android's Actions.
    */
   renderCustomActions = (props) => {
+    if(this.recording){
+      return(
+        <View style={{ flexDirection: 'row' }}>
+        <Microphone cUid={this.props.cUid} prepareRecordingUI={this._prepareRecordingUI} />
+        </View>
+
+
+      )
+    }
     return (
-      <CustomActions
-        {...props}
-        onCamera={this._onCamera}
-        onLibrary={this._onLibrary}
-      />
+      <View style={{ flexDirection: 'row' }}>
+        <Microphone cUid={this.props.cUid} prepareRecordingUI={this._prepareRecordingUI}  />
+        <CustomActions
+          {...props}
+          onCamera={this._onCamera}
+          onLibrary={this._onLibrary}
+        />
+
+      </View>
+
     );
   }
 
+  renderCustomView = (props) => {
+    const { currentMessage,position, isRecording } = props
+    if (currentMessage.audio) {
+      logger.debug('Returning audio')
+      return (
+        <MessageAudio audioSource={currentMessage.audio} isRecording={isRecording} position={position} />
+      )
+    }
+  }
   /**
    * Renders message bubbles.
    */
   renderBubble = (props) => {
     return <Bubble {...props} wrapperStyle={styles.bubble} />;
   }
+
+  render
 
   /**
    * Renders the day the message was received, if appropriate.
@@ -293,9 +782,15 @@ export default class Chat extends React.Component {
    */
   renderSystemMessage = (props) => {
     return (
-      <SystemMessage {...props}/>
+      <SystemMessage {...props} />
     );
   }
+
+
+
+
+
+
 
   render() {
     let offset = Platform.OS == 'ios' ? Heights.iOSTabBar :
@@ -311,15 +806,18 @@ export default class Chat extends React.Component {
     // Converts the messages from the state manager to whatever the GiftedChat
     // module expects. Annoying, but I really don't want to tie the StateManager
     // to GiftedChat by any means.
-    const giftMessages = this.props.messages.map((message) => {
-      const createdAt = message.timestamp;
 
+
+    const giftMessages = this.props.messages.map((message) => {
+
+      const createdAt = message.timestamp;
       const formattedMessage = {
         _id: message.uid,
         createdAt: createdAt,
         text: message.content.text,
         image: message.content.image,
         title: message.content.title,
+        audio: message.content.audio,
       };
 
       // Add either system or user information.
@@ -332,31 +830,49 @@ export default class Chat extends React.Component {
       }
 
       return formattedMessage;
-    }).sort(cmpFunc).reverse();
-
+    }
+    ).sort(cmpFunc).reverse();
     return (
-      <GiftedChat
-        messages={giftMessages}
-        onSend={this.onSend}
-        onReceive={this.onReceive}
+        <GiftedChat
+          messages={giftMessages}
+          onSend={this.onSend}
+          onReceive={this.onReceive}
 
-        user={{_id: stateManager.getUser().uid}}
+          user={{ _id: stateManager.getUser().uid }}
+          renderMessage={this.renderMessage}
+          renderBubble={this.renderBubble}
+          renderSystemMessage={this.renderSystemMessage}
+          renderDay={this.renderDay}
+          renderActions={this.renderCustomActions}
+          renderSend={this.recording ? null : this.renderSend}
+          renderAvatar={null}
+          renderCustomView={this.renderCustomView}
+          renderComposer={(props) => {
+            if (this.recording) {
+              return (
+                null
 
-        renderBubble={this.renderBubble}
-        renderSystemMessage={this.renderSystemMessage}
-        renderDay={this.renderDay}
-        renderActions={this.renderCustomActions}
-        renderSend={this.renderSend}
-        renderAvatar={null}
+              )
+            }
+            else {
+              return (
 
-        imageStyle={{resizeMode: 'cover'}}
-        lightboxProps={{springConfig: { speed: 80, overshootClamping: true }}}
+                  <Composer {...props} />
 
-        forceGetKeyboardHeight={true}
-        bottomOffset={0}
-        autoCapitalize='none'
-        autoComplete={false}
-      />
+              )
+
+            }
+
+          }}
+          imageStyle={{ resizeMode: 'cover' }}
+          lightboxProps={{ springConfig: { speed: 80, overshootClamping: true } }}
+
+          forceGetKeyboardHeight={true}
+          bottomOffset={0}
+          autoCapitalize='none'
+          autoComplete={false}
+          isRecording = {this.recording}
+        />
     );
   }
 }
@@ -452,6 +968,75 @@ const styles = {
       color: Colors.Mimo,
     },
   }),
+  microphone: StyleSheet.create({
+    icon: {
+      width: 26,
+      height: 26,
+      marginLeft: 8,
+      marginRight: 0,
+      marginBottom: 5,
+    },
+    iconOnRecording:{
+      width: 26,
+      height: 26,
+    },
+    iconWrapperOnRecording:{
+      backgroundColor: 'rgba(240,30,10,0.8)',
+      opacity: 0.8,
+      borderRadius:40,
+      alignContent: 'center',
+      padding: '3%'
+    },
+    sendButton:{
+      flex:1,
+      backgroundColor:Colors.Mimo,
+      paddingVertical: '2.5%',
+      paddingHorizontal: 0,
+      borderRadius: 30,  
+    },
+    sendText:{
+      fontFamily:'josefin-sans-bold',
+      textAlign: 'center', // <-- the magic
+      color: 'white',
+      fontSize: 12,
+      marginTop:3,
+    },
+    cancelText:{
+      fontSize: 12,
+      color:'rgb(180,180,180)'
+
+    },
+    recordingDuration:{
+      textAlign:'center',
+      color:'grey',
+      
+
+    }
+  }),
+  messageAudio: StyleSheet.create({
+    wrapper: {
+      marginTop: 8,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: 5,
+      flexDirection: 'row'
+
+    },
+    icon: {
+      width: 26,
+      height: 26,
+    },
+  }),
+  footer: StyleSheet.create({
+    recordingText: {
+      color: Colors.White
+    },
+    recordingContainer: {
+      alignItems: 'center',
+      backgroundColor: 'rgba(244, 244, 243, 0.8)',
+      padding: 50,
+    },
+  }),
   system: StyleSheet.create({
     container: {
       alignItems: 'center',
@@ -480,12 +1065,14 @@ const styles = {
   }),
 }
 
+
+
 CustomActions.contextTypes = {
   actionSheet: PropTypes.func,
 };
 
 CustomActions.defaultProps = {
-  onSend: () => {},
+  onSend: () => { },
   options: {},
   icon: null,
   containerStyle: {},

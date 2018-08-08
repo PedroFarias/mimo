@@ -36,13 +36,18 @@ class ConversationItem extends React.Component {
 
     // Content and timestamp of the last message, if any.
     let message = '';
+    console.log('lastMessage',lastMessage)
     if (lastMessage) {
       if (lastMessage.content.text != null) {
         message = lastMessage.content.text;
         if (lastMessage.sender == 'system') {
           message = '[Mimo]: ' + message;
         }
-      } else {
+      }
+      if(lastMessage.content.audio != null){
+          message = 'Audio';
+      }
+      else {
         message = 'Imagem';
       }
     }

@@ -23,6 +23,32 @@ export const Heights = {
   AndroidTabBar: 48,
   TabBarIcon: 20,
 }
+/*
+Recording Options for Audio Recording. See Expo Docs:
+https://docs.expo.io/versions/latest/sdk/audio#recording-sounds
+
+*/
+export const RecordingOptions = {
+  android: {
+    extension: '.m4a',
+    outputFormat: Expo.RECORDING_OPTION_ANDROID_OUTPUT_FORMAT_MPEG_4,
+    audioEncoder: Expo.RECORDING_OPTION_ANDROID_AUDIO_ENCODER_AAC,
+    sampleRate: 44100,
+    numberOfChannels: 2,
+    bitRate: 128000,
+  },
+  ios: {
+    extension: '.m4a',
+    audioQuality: Expo.RECORDING_OPTION_IOS_AUDIO_QUALITY_MAX,
+    outputFormat: Expo.Audio.RECORDING_OPTION_IOS_OUTPUT_FORMAT_MPEG4AAC,
+    sampleRate: 44100,
+    numberOfChannels: 2,
+    bitRate: 128000,
+    linearPCMBitDepth: 16,
+    linearPCMIsBigEndian: false,
+    linearPCMIsFloat: false,
+  },
+};
 
 export const Auth = {
   Types: {

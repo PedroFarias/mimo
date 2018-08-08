@@ -6,6 +6,7 @@ import StoreManager from './StoreManager';
 import ConversationManager from './ConversationManager';
 import MimoManager from './MimoManager';
 import PushManager from './PushManager';
+import AudioManager from './AudioManager'
 
 /**
  * Manages the state and general interactions with a backend object. Provides
@@ -64,6 +65,11 @@ export class StateManager {
       logger.warn('StateManager initialized without a PushManager.');
     }
 
+    if (options.audioManager !== undefined) {
+      this._audioManager = new AudioManager();
+    } else {
+      logger.warn('StateManager initialized without a AudioManger.');
+    }
     // Initializes server state; does not yet start listening to events,
     // since we may not be authenticated yet. Each Manager takes care of
     // requesting their required events to be listened to.
@@ -202,6 +208,13 @@ export class StateManager {
     return this._server.getTimestamp();
   }
 
+  getRecordingStatus = () =>{
+    if (this._audioManager == null) {
+      throw new Error('AudioManger does not exist.');
+    }
+    return this._audioManager.getRecordingStatus()
+  }
+
   /*
    *************************************************************************
                           STATE MANAGER ACTIONS
@@ -266,6 +279,37 @@ export class StateManager {
     }
     await this._mimoManager.rejectMimo(mUid);
   }
+  
+  registerSound = async(Uid,instance) =>{
+    if (this._audioManager == null) {
+      throw new Error('AudioManger does not exist.');
+    }
+    await this._audioManager.registerSound(Uid,instance)
+  }
+
+  unRegisterSound = async(Uid) =>{
+    if (this._audioManager == null) {
+      throw new Error('AudioManger does not exist.');
+    }
+    await this._audioManager.unRegisterSound(Uid)
+  }
+
+  stopSounds = async() =>{
+    if (this._audioManager == null) {
+      throw new Error('AudioManger does not exist.');
+    }
+    await this._audioManager.stopSounds()
+  }
+
+  toggleRecordingStatus = async() =>{
+    if (this._audioManager == null) {
+      throw new Error('AudioManger does not exist.');
+    }
+    await this._audioManager.toggleRecordingStatus()
+  }
+
 }
+
+
 
 export const stateManager = new StateManager();

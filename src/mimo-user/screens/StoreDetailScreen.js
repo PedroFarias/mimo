@@ -9,7 +9,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-
+import {WebBrowser} from 'expo';
 import TopBar from '../components/TopBar';
 import { stateManager } from '../state/StateManager';
 import { Colors, Heights } from '../util/Constants';
@@ -22,6 +22,8 @@ import { Colors, Heights } from '../util/Constants';
  * categories, they won't show. Do something similar to CategoryBar.
  */
 class Store extends React.Component {
+
+
   // Renders an item on the list, by using a CategoryItem component.
   _renderItem = ({item}) => {
     return (
@@ -35,6 +37,7 @@ class Store extends React.Component {
   _keyExtractor = (item) => item.uid;
 
   render() {
+    console.log('store props',this.props)
     const categories = this.props.store.categories.map((category, index) => {
       return {
         uid: index,
@@ -65,6 +68,13 @@ class Store extends React.Component {
       /> :
       null;
 
+    if(this.props.store.weblink){
+      console.log('in weblink')
+        webLink = this.props.store.weblink.includes('http://') || 
+        this.props.store.weblink.includes('https://') ? this.props.store.weblink :
+        'http://' + this.props.store.weblink
+    }
+
     return (
       <ScrollView>
         <View style={styles.layout.store}>
@@ -78,6 +88,15 @@ class Store extends React.Component {
           <Text style={styles.store.description}>
             {this.props.store.description}
           </Text>
+          
+          {
+            this.props.store.weblink && 
+            <TouchableOpacity onPress={()=>WebBrowser.openBrowserAsync(webLink)} >
+            <Text style={styles.store.weblink} >
+            { webLink.split('//')[1]}
+            </Text>
+            </TouchableOpacity>
+          } 
           <View style={styles.layout.category}>
             <FlatList
               horizontal
@@ -147,6 +166,7 @@ export default class StoreDetailScreen extends React.Component {
           showRight={false}
         />
         <Store store={this.store}/>
+        
         <TouchableOpacity
           style={boxStyle}
           onPress={this._onPress}
@@ -240,6 +260,16 @@ const styles = {
       textAlign: 'center',
       padding: 30,
       includeFontPadding: false,
+    },
+    weblink:{
+      fontFamily: 'josefin-sans-thin',
+      fontSize: 16,
+      color: Colors.Black,
+      textAlign: 'center',
+      padding: 10,
+      paddingBottom:40 ,
+      includeFontPadding: false,
+
     },
   }),
   category: StyleSheet.create({

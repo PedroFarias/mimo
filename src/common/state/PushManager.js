@@ -35,6 +35,7 @@ export default class PushManager {
       finalStatus = status;
     }
 
+
     // Stop here if the user did not grant permissions
     if (finalStatus !== 'granted') {
       return;
@@ -42,6 +43,8 @@ export default class PushManager {
 
     // Get the token that uniquely identifies this device
     let token = await Notifications.getExpoPushTokenAsync();
+
+    console.log('Device Token:',token)
 
     // Request that server saves it.
     await this._server.savePushNotification(token);

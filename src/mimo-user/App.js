@@ -33,6 +33,7 @@ export default class App extends React.Component {
       mimoManager: {role: 'customer'},
       conversationManager: true,
       pushManager: true,
+      audioManager: true
     });
   }
 

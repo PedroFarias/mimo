@@ -122,6 +122,47 @@ const binarySearch = (list, cmpFunc, value) => {
 };
 
 /*
+Simple Uid generator taken from: https://stackoverflow.com/questions/6248666/how-to-generate-short-uid-like-ax4j9z-in-js
+Currently used for Audio Manager. 
+Note: Yes, I could do it, but whatever,it's good.
+*/
+const generateUID = () =>{
+  // I generate the UID from two parts here 
+  // to ensure the random number provide enough bits.
+  var firstPart = (Math.random() * 46656) | 0;
+  var secondPart = (Math.random() * 46656) | 0;
+  firstPart = ("000" + firstPart.toString(36)).slice(-3);
+  secondPart = ("000" + secondPart.toString(36)).slice(-3);
+  return firstPart + secondPart;
+}
+
+
+/*
+Transform milliseconds into  display format for Audio messages and Recording.
+
+It is expect milliseconds as an Integer, still it will parse again to be sure it isn't 
+a string.
+
+@return String
+*/
+milliToSecondsAndMinutesFormat = (milli) =>{
+  try{
+    let milli = parseInt(milli)
+  }
+  catch(error){
+    console.log('Error while parsing String', error)
+  }
+  let minutes = Math.floor(((milli)/1000/60))
+  let seconds = ((milli % 60000) / 1000).toFixed(0);
+  if (isNaN(minutes) || isNaN(seconds)){
+    return('0:00')
+  }
+  return  (seconds == 60 ? (minutes+1) + ":00" : minutes + ":" + (seconds < 10 ? "0" : "") + seconds)
+
+}
+
+
+/*
  *************************************************************************
                          FIREBASE PATH HELPERS
 
@@ -133,6 +174,7 @@ const binarySearch = (list, cmpFunc, value) => {
 
 const PATH = {
   ACCEPTED_MIMOS: 'acceptedMimos',
+  AUDIO: 'audio',
   CONVERSATIONS: 'conversations',
   EMPLOYEES: 'employees',
   IMAGES: 'images',
@@ -208,7 +250,16 @@ const getMimosPath = () => PATH.MIMOS;
 const getImagePath = (cUid, mUid) => format('%s/%s/%s/%s', PATH.CONVERSATIONS,
   cUid, PATH.IMAGES, mUid);
 
+   /**
+ * Image-related paths.
+ */
+const getAudioPath = (cUid, mUid) => format('%s/%s/%s/%s', PATH.CONVERSATIONS,
+cUid, PATH.AUDIO, mUid);
+
+
 /*
+
+
  *************************************************************************
                                  ASSERTS
 
@@ -290,7 +341,14 @@ export {
 };
 export {
   getImagePath,
+  getAudioPath,
 };
+export{
+  milliToSecondsAndMinutesFormat,
+};
+export{
+  generateUID,
+}
 export {
   getMimoPath,
   getMimosPath,

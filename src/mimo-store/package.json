@@ -14,7 +14,7 @@
   "dependencies": {
     "assert": "^1.4.1",
     "expo": "^25.0.0",
-    "firebase": "^4.12.0",
+    "firebase": "^5.3.1",
     "react": "16.2.0",
     "react-native": "https://github.com/expo/react-native/archive/sdk-25.0.0.tar.gz",
     "react-native-checkbox": "^2.0.0",
