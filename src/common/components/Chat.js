@@ -42,7 +42,6 @@ import pauseIconLeft from '../assets/icons/pauseLeft.png';
 
 
 import { FadeInView, BlinkingOpacity } from './Animations';
-import { Pan } from './Slider';
 
 
 
@@ -263,7 +262,7 @@ class Microphone extends React.Component {
 
     this._toggleRecordingUI()
 
-    this._askRecordingPermissions()
+    await this._askRecordingPermissions()
     
     
     const mode = {
