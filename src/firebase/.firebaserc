@@ -1,5 +1,6 @@
 {
   "projects": {
-    "default": "mimo-7b006"
+    "default": "mimo-7b006",
+    "production": "mimo-69109"
   }
 }

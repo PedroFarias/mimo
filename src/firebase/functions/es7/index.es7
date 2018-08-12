@@ -207,6 +207,8 @@ const onStoreEmployee = async (params, snapshot) => {
   }
 };
 
+
+
 const onMessageSendPush = async (params, snapshot) => {
   logger.debug(`params: %s, snapshot.val(): %s`, params, snapshot.val());
   const db = admin.database().ref();
@@ -215,8 +217,7 @@ const onMessageSendPush = async (params, snapshot) => {
   const message = snapshot.val();
 
   const cPath = getConversationPath(cUid);
-
-  try {
+  try{
     const cSnapshot = await db.child(cPath).once('value');
     if (cSnapshot == null || cSnapshot.val() == null) {
       logger.error(`Cannot find conversation "%s" to send push notifications.`,
@@ -233,20 +234,34 @@ const onMessageSendPush = async (params, snapshot) => {
       body: 'Quem sabe que produto te espera agora?',
     };
 
-    const customerPath = getUserPushNotificationTokenPath(
-      conversation.customer);
-    const employeePath = getUserPushNotificationTokenPath(
-      conversation.employee);
-    const customerSnapshot = await db.child(customerPath).once('value');
-    const employeeSnapshot = await db.child(employeePath).once('value');
+    if(message.sender === conversation.customer){
+      console.log('Message sent by Customer', message.sender)
+      const employeePath = getUserPushNotificationTokenPath(
+        conversation.employee);
 
-    if (customerSnapshot != null && customerSnapshot.val() != null) {
-      const customerToken = customerSnapshot.val();
-      requestBody.push({...pushBody, to: customerToken});
+      const employeeSnapshot = await db.child(employeePath).once('value');
+
+      if (employeeSnapshot != null && employeeSnapshot.val() != null) {
+        const employeeToken = employeeSnapshot.val();
+        requestBody.push({...pushBody, to: employeeToken});
+      }
+
     }
-    if (employeeSnapshot != null && employeeSnapshot.val() != null) {
-      const employeeToken = employeeSnapshot.val();
-      requestBody.push({...pushBody, to: employeeToken});
+    else{
+        if(message.sender === conversation.employee){
+          console.log('Message sent by Employee', message.sender)
+
+          const customerPath = getUserPushNotificationTokenPath(
+            conversation.customer);
+    
+          const customerSnapshot = await db.child(customerPath).once('value');
+    
+    
+          if (customerSnapshot != null && customerSnapshot.val() != null) {
+            const customerToken = customerSnapshot.val();
+            requestBody.push({...pushBody, to: customerToken});
+          }
+        }
     }
 
     const headers = {
@@ -261,11 +276,16 @@ const onMessageSendPush = async (params, snapshot) => {
       headers: headers,
       body: JSON.stringify(requestBody),
     });
-  } catch (error) {
+  }catch(error){
     logger.error(`Failed to send push notification. Error: %s`,
-      error.toString());
+    error.toString());
   }
+
+  
 };
+
+
+
 const devApi = functions.https.onRequest(app)
 const api = functions.https.onRequest(app);
 const storeEmployee = functions.database
@@ -278,4 +298,6 @@ const messagePushNotification = functions.database
 });
 
 
-export { api, storeEmployee, messagePushNotification, devApi };
+
+
+export { api, storeEmployee, messagePushNotification,  devApi };

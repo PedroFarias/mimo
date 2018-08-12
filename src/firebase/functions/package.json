@@ -11,6 +11,7 @@
     "prepare": "cd es7; babel ./*.es7 --retain-lines -d ../; cd .."
   },
   "dependencies": {
+    "babel-plugin-transform-class-properties": "^6.24.1",
     "babel-runtime": "^6.23.0",
     "body-parser": "^1.18.2",
     "busboy": "^0.2.14",
